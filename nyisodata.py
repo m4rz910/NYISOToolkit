@@ -13,7 +13,7 @@ supported_datasets = ['load_h', 'load_5m',
 class NYISOData:
     
     def __init__(self, dataset, year,
-                 reconstruct=False, storage_dir=pl.Path(__file__).resolve().parent):
+                 reconstruct=False, storage_dir=pl.Path('__file__').resolve().parent):
         """
         Creates a local pickle database based on dataset name and year stored in UTC.
         
@@ -87,7 +87,7 @@ class NYISOData:
         
         #Check whether to get new data and construct new DB
         if (not pl.Path(self.output_dir,'{}_{}.pkl'.format(self.year,self.dataset)).is_file()) or reconstruct:
-            self.get_raw_data()
+            #self.get_raw_data()
             self.construct_database()
         else:
             print('{}_{}.pkl exists'.format(self.year,self.dataset))
@@ -95,9 +95,8 @@ class NYISOData:
         print('Done\n')
             
     def get_raw_data(self):
-        """
-        Downloads raw CSV's from NYISO Website
-        """
+        """Downloads raw CSV's from NYISO Website"""
+        
         #Determine correct months to download
         print('Downloading Data from NYISO...')
         if self.curr_date.year == int(self.year):
@@ -145,7 +144,6 @@ class NYISOData:
         else:
             assert False, 'A year larger than the current year was queried!'
         timestamps = pd.date_range(start=start, end=end, freq=self.f, tz='US/Eastern')
-        timestamps = pd.Series(index= timestamps, data = range(0,len(timestamps)))
         
         # Construct Database
         print('Constructing DB...')
@@ -162,8 +160,11 @@ class NYISOData:
             if 'Time Zone' not in df.columns:
                 #issue section
                 #sol 1 (havent tested, but way too intensive)
-                raw = {t:subdf.pivot(columns=self.col, values=self.val_col) for t, subdf in df.groupby(df.index)}
+                window_size = df[self.col].unique()
+                raw = {t:subdf.pivot(columns=self.col, values=self.val_col) for t, subdf in df.rolling(len(window_size))}
                 df = pd.DataFrame.from_dict(raw)
+                
+                
                 #end of issue section
                 
             #Make index timezone aware (US/Eastern)
@@ -214,4 +215,4 @@ if __name__ == '__main__':
     #for year in ['2013','2019']:
     #    construct_all_databases(year,reconstruct=True)
 
-    df = NYISOData(dataset='interface_flows_5m', year='2020').df
+    df = NYISOData(dataset='load_h', year='2019').df
