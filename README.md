@@ -22,20 +22,19 @@ df = df.tz_localize(US/Eastern)
 
 # Raw Data Information
 
-Timezone: NYISO Data is in local time: US/Eastern
-
-"Integrated Real-Time Actual Load is posted after each hour and represents the timeweighted hourly load for each zone"
+Real-Time Hourly Actual Load
+- "Integrated Real-Time Actual Load is posted after each hour and represents the timeweighted hourly load for each zone" - NYISO Manual
 - Frequency: Hourly (Sometimes they may miss or do higher)
 - Datetime Convention: Start of hour
 
-"Real-Time Actual Load posts the actual measured load for each RTD interval (5 minutes) by zone. 
-Actual loads are calculated as generation plus net interchange for each zone, based on real-time telemetered data."
+Real-Time 5-min Actual Load
+- "Real-Time Actual Load posts the actual measured load for each RTD interval (5 minutes) by zone. 
+Actual loads are calculated as generation plus net interchange for each zone, based on real-time telemetered data." - NYISO Manual
 - Frequency: 5 mins (Sometimes they may miss or do higher)
-- Datetime Convention: End of 5 mins
+- Datetime Convention: End of 5 mins (Thats what I interpreted from the timing of release of realtime data)
 
 Energy Mix
 - Datetime convention: End of 5 mins
-
 
 Interface flows
 - Positive and Negative limits are currently not being pulled
