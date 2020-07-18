@@ -17,7 +17,7 @@ All datasets...
 from nyisodata import NYISOData
 df = NYISOData(dataset='load_h', year='2019').df # year argument in local time, but returns dataset in UTC 
 
-#if you need to work in locat time, then convert time zone
+#if you need to work in local time, then convert time zone
 df = df.tz_localize('US/Eastern')
 ```
 
