@@ -38,7 +38,7 @@ Fuel Mix (fuel_mix_5m)
 - Frequency: 5 mins 
 - Datetime convention: End of 5 mins
 
-Interface flows (interface_flows_5m)
+Interface Flows (interface_flows_5m)
 - Positive and Negative limits are currently not included
 - Frequency: 5 mins 
 - Datetime Convention: End of 5 mins
