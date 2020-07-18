@@ -7,9 +7,10 @@ Datasets Currently Supported:
 - fuel_mix_5m (5-min frequency)
 - interface_flows_5m (5-min internal and external flows between regions)
 
-Units for all datasets...
+All datasets...
 - Values: Power [MW]
 - Timezone: Coordinated Universal Time [UTC]
+- Frequency: Raw data sometimes has higher or lower frequency than it states but the code resamples using mean values
 
 # Usage Example
 ```python
@@ -20,22 +21,24 @@ df = NYISOData(dataset='load_h', year='2019').df # year argument in local time, 
 df = df.tz_localize(US/Eastern)
 ```
 
-# Raw Data Information
+# Dataset Information
 
-Real-Time Hourly Actual Load
+Real-Time Hourly Actual Load (load_h)
 - "Integrated Real-Time Actual Load is posted after each hour and represents the timeweighted hourly load for each zone" - NYISO Manual
-- Frequency: Hourly (Sometimes they may miss or do higher)
+- Frequency: Hourly
 - Datetime Convention: Start of hour
 
-Real-Time 5-min Actual Load
+Real-Time 5-min Actual Load (load_5m)
 - "Real-Time Actual Load posts the actual measured load for each RTD interval (5 minutes) by zone. 
 Actual loads are calculated as generation plus net interchange for each zone, based on real-time telemetered data." - NYISO Manual
-- Frequency: 5 mins (Sometimes they may miss or do higher)
-- Datetime Convention: End of 5 mins (Thats what I interpreted from the timing of release of realtime data)
+- Frequency: 5 mins 
+- Datetime Convention: End of 5 mins (That's what I interpreted from the timing of release of realtime data)
 
-Energy Mix
+Fuel Mix (fuel_mix_5m)
+- Frequency: 5 mins 
 - Datetime convention: End of 5 mins
 
-Interface flows
-- Positive and Negative limits are currently not being pulled
+Interface flows (interface_flows_5m)
+- Positive and Negative limits are currently not included
+- Frequency: 5 mins 
 - Datetime Convention: End of 5 mins
