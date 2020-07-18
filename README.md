@@ -7,9 +7,9 @@ Datasets Currently Supported:
 - fuel_mix_5m (5-min frequency)
 - interface_flows_5m (5-min internal and external flows between regions)
 
-For add datasets..
-- Value Units: Power [MW]
-- Timezone Units: UTC
+For add datasets...
+- Values: Power [MW]
+- Timezone: Coordinated Universal Time [UTC]
 
 # Usage Example
 ```python
@@ -19,3 +19,24 @@ df = NYISOData(dataset='load_h', year='2019').df # year argument in local time, 
 #if you need to work in locat time, then convert time zone
 df = df.tz_localize(US/Eastern)
 ```
+
+# Raw Data Information
+
+Timezone: NYISO Data is in local time: US/Eastern
+
+"Integrated Real-Time Actual Load is posted after each hour and represents the timeweighted hourly load for each zone"
+- Frequency: Hourly (Sometimes they may miss or do higher)
+- Datetime Convention: Start of hour
+
+"Real-Time Actual Load posts the actual measured load for each RTD interval (5 minutes) by zone. 
+Actual loads are calculated as generation plus net interchange for each zone, based on real-time telemetered data."
+- Frequency: 5 mins (Sometimes they may miss or do higher)
+- Datetime Convention: End of 5 mins
+
+Energy Mix
+- Datetime convention: End of 5 mins
+
+
+Interface flows
+- Positive and Negative limits are currently not being pulled
+- Datetime Convention: End of 5 mins
