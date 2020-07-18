@@ -7,9 +7,9 @@ Datasets Currently Supported:
 - fuel_mix_5m (5-min frequency)
 - interface_flows_5m (5-min internal and external flows between regions)
 
-For add datasets
-Value Units: Power [MW]
-Timezone Units: UTC
+For add datasets..
+- Value Units: Power [MW]
+- Timezone Units: UTC
 
 # Usage Example
 ```python
