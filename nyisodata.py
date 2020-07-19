@@ -15,13 +15,13 @@ class NYISOData:
     def __init__(self, dataset, year,
                  reconstruct=False, storage_dir=pl.Path('__file__').resolve().parent):
         """
-        Creates a local pickle database based on dataset name and year stored in UTC.
+        Creates a local database based on dataset name and year stored in UTC.
         
         Arguments:
-            - dataset: name of dataset need (Currently supported: load_h, load_5m, fuel_mix_5m,'interface_flows_5m')
-            - year: Year of data needed (in local time)
-            - reconstruct: If true, redownload NYISO data and reconstruct pickle database
-            - storage_dir: The directory that the raw csvs and pickle databases will be stored
+            - dataset: name of dataset need 
+            - year: Year of data needed (in Eastern Time)
+            - reconstruct: If true, redownload NYISO data and reconstruct database
+            - storage_dir: The directory that the raw csvs and databases will be stored
         """
         
         print('Working on {} for {}...'.format(dataset,year))
@@ -86,12 +86,15 @@ class NYISOData:
         """Decides whether to download new data and (re)make database or just read existing one."""
         
         #Check whether to get new data and construct new DB
-        if (not pl.Path(self.output_dir,'{}_{}.pkl'.format(self.year,self.dataset)).is_file()) or reconstruct:
-            #self.get_raw_data()
+        if (not pl.Path(self.output_dir,'{}_{}.csv'.format(self.year,self.dataset)).is_file()) or reconstruct:
+            self.get_raw_data()
             self.construct_database()
         else:
-            print('{}_{}.pkl exists'.format(self.year,self.dataset))
-            self.df = pd.read_pickle(pl.Path(self.output_dir,'{}_{}.pkl'.format(self.year, self.dataset)))
+            print('{}_{}.csv exists'.format(self.year,self.dataset))
+            self.df = pd.read_csv(pl.Path(self.output_dir,'{}_{}.csv'.format(self.year, self.dataset)),
+                                  index_col=0)
+            self.df.index = pd.to_datetime(self.df.index, utc=True) #set the time zone
+            
         print('Done\n')
             
     def get_raw_data(self):
@@ -157,26 +160,31 @@ class NYISOData:
             df.index = pd.to_datetime(df.index)
             
             # Create 'Time Zone' column if the csv files don't include one
-            if 'Time Zone' not in df.columns:
-                #issue section
-                #sol 1 (havent tested, but way too intensive)
-                window_size = df[self.col].unique()
-                raw = {t:subdf.pivot(columns=self.col, values=self.val_col) for t, subdf in df.rolling(len(window_size))}
-                df = pd.DataFrame.from_dict(raw)
+            if 'Time Zone' in df.columns:
+                #Make index timezone aware (US/Eastern)
+                df = df.tz_localize('US/Eastern', ambiguous=df['Time Zone']=='EST')
+                df = df.sort_index(axis='index').tz_convert('UTC')
+                #Convert to UTC so that pivot can work without throwing error for duplicate indices (due to
+                df = check_and_interpolate_nans(df)
+                df = df.pivot(columns=self.col, values=self.val_col) # make columns
+                print('Resampling...')
+                df = df.resample(self.f).mean()     
+                df = check_and_interpolate_nans(df)
                 
+            else:
+                frames = []
+                for ctype, subdf in df.groupby(by=self.col):
+                    subdf = subdf.tz_localize('US/Eastern', ambiguous='infer').tz_convert('UTC')
+                    print('Resampling...')
+                    subdf = subdf.resample(self.f).mean()     
+                    subdf = check_and_interpolate_nans(subdf)
+                    subdf.loc[:,self.col] = ctype
+                    frames.append(subdf)
+                df = pd.concat(frames)
+                #check if the number of regions/interface flow name are equal
+                if not (len(set(df[self.col].value_counts().values)) <= 1): 
+                    print('Warning: There seems to be underlying missing data.')
                 
-                #end of issue section
-                
-            #Make index timezone aware (US/Eastern)
-            df = df.tz_localize('US/Eastern', ambiguous=df['Time Zone']=='EST')
-
-            #Convert to UTC so that pivot can work without throwing error for duplicate indices (due to DST)
-            df = df.sort_index(axis='index').tz_convert('UTC') 
-            df = check_and_interpolate_nans(df)
-            df = df.pivot(columns=self.col, values=self.val_col) # make columns
-            print('Resampling...')
-            df = df.resample(self.f).mean()     
-            df = check_and_interpolate_nans(df)
             if self.type == 'load':
                 df['NYCA'] = df.sum(axis='columns') #Calculate statewide load based on interpolated values
 
@@ -189,13 +197,13 @@ class NYISOData:
             assert ~df.isnull().values.any(), 'NANs Found! Resampling and interpolation should have handled this.'
             #Save and return dataset in UTC
             df = df.tz_convert('UTC')
-            df.to_pickle(pl.Path(self.output_dir,'{}_{}.pkl'.format(self.year, self.dataset)))
+            df.to_csv(pl.Path(self.output_dir,'{}_{}.csv'.format(self.year, self.dataset)))
             self.df = df
             
 def check_and_interpolate_nans(df):
     """If there are NANs in the data, interpolate"""
     if df.isnull().values.any(): 
-        print('Warning: {} Nans found... interpolating'.format(df.isna().sum().sum()))
+        print('Note: {} Nans found... interpolating'.format(df.isna().sum().sum()))
         df.interpolate(method='linear', inplace=True)
     else:
         print('Yay! No interpolation was needed.')
@@ -212,7 +220,7 @@ if __name__ == '__main__':
     #construct_all_databases()
     
     #Construct all db
-    #for year in ['2013','2019']:
+    #for year in ['2020','2019','2013']:
     #    construct_all_databases(year,reconstruct=True)
 
-    df = NYISOData(dataset='load_h', year='2019').df
+    df = NYISOData(dataset='interface_flows_5m', year='2013', reconstruct=True).df
