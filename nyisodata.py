@@ -6,7 +6,7 @@ import requests, zipfile, io
 from datetime import datetime, timedelta
 import pytz
 
-supported_datasets = ['load_h', 'load_5m',
+SUPPORTED_DATASETS = ['load_h', 'load_5m',
                       'fuel_mix_5m',
                       'interface_flows_5m']
 
@@ -87,14 +87,15 @@ class NYISOData:
         """Decides whether to download new data and (re)make database or just read existing one."""
         
         #Check whether to get new data and construct new DB
-        if (not pl.Path(self.output_dir,'{}_{}.csv'.format(self.year,self.dataset)).is_file()) or reconstruct:
+        file_ = pl.Path(self.output_dir, f'{self.year}_{self.dataset}.csv')
+
+        if not file_.exists() or reconstruct:
             self.get_raw_data()
             self.construct_database()
         else:
-            print('{}_{}.csv exists'.format(self.year,self.dataset))
-            self.df = pd.read_csv(pl.Path(self.output_dir,'{}_{}.csv'.format(self.year, self.dataset)),
-                                  index_col=0)
-            self.df.index = pd.to_datetime(self.df.index, utc=True) #set the time zone
+            print(f'{file_.name} exists')
+            self.df = pd.read_csv(file_, index_col=0)
+            self.df.index = pd.to_datetime(self.df.index, utc=True) # set the time zone
             
         print('Done\n')
             
@@ -190,7 +191,7 @@ class NYISOData:
                 df['NYCA'] = df.sum(axis='columns') #Calculate statewide load based on interpolated values
             if self.type == 'interface_flows':
                 #remap external interface names to match website
-                df['Interface Name'] = df['Interface Name'].map(e_tflows_map).fillna(df['Interface Name'])
+                df['Interface Name'] = df['Interface Name'].map(E_TFLOWS_MAP).fillna(df['Interface Name'])
                 
             #Convert back to US/Eastern to select time period based on local time
             df = df.tz_convert('US/Eastern') 
@@ -219,7 +220,7 @@ def construct_databases(years, datasets, reconstruct=False):
         for year in years:
             NYISOData(dataset=dataset, year=year, reconstruct=reconstruct)
            
-e_tflows_map = {'SCH - HQ - NY': 'HQ CHATEAUGUAY',
+E_TFLOWS_MAP = {'SCH - HQ - NY': 'HQ CHATEAUGUAY',
                 'SCH - HQ_CEDARS': 'HQ CEDARS',
                 'SCH - HQ_IMPORT_EXPORT': 'HQ NET',
                 'SCH - NE - NY':  'NPX NEW ENGLAND (NE)',
@@ -233,6 +234,6 @@ e_tflows_map = {'SCH - HQ - NY': 'HQ CHATEAUGUAY',
 
 if __name__ == '__main__':
     years = ['2013','2019','2020']
-    datasets = supported_datasets
+    datasets = SUPPORTED_DATASETS
     construct_databases(years=years, datasets=datasets, reconstruct=True)
      
