@@ -10,6 +10,7 @@ supported_datasets = ['load_h', 'load_5m',
                       'fuel_mix_5m',
                       'interface_flows_5m']
 
+
 class NYISOData:
     
     def __init__(self, dataset, year,
@@ -187,7 +188,10 @@ class NYISOData:
                 
             if self.type == 'load':
                 df['NYCA'] = df.sum(axis='columns') #Calculate statewide load based on interpolated values
-
+            if self.type == 'interface_flows':
+                #remap external interface names to match website
+                df['Interface Name'] = df['Interface Name'].map(e_tflows_map).fillna(df['Interface Name'])
+                
             #Convert back to US/Eastern to select time period based on local time
             df = df.tz_convert('US/Eastern') 
             df = df.loc[start:end] 
@@ -209,18 +213,26 @@ def check_and_interpolate_nans(df):
         print('Yay! No interpolation was needed.')
     return df
 
-def construct_all_databases(year=str(datetime.now(tz=pytz.timezone('US/Eastern')).year),
-                            reconstruct=True):
+def construct_databases(years, datasets, reconstruct=False):
     """Constructs all Databases for current year"""
-    for dataset in supported_datasets:
-        NYISOData(dataset=dataset, year=year, reconstruct=reconstruct)
+    for dataset in datasets:
+        for year in years:
+            NYISOData(dataset=dataset, year=year, reconstruct=reconstruct)
+           
+e_tflows_map = {'SCH - HQ - NY': 'HQ CHATEAUGUAY',
+                'SCH - HQ_CEDARS': 'HQ CEDARS',
+                'SCH - HQ_IMPORT_EXPORT': 'HQ NET',
+                'SCH - NE - NY':  'NPX NEW ENGLAND (NE)',
+                'SCH - NPX_1385': 'NPX 1385 NORTHPORT (NNC)',
+                'SCH - NPX_CSC':  'NPX CROSS SOUND CABLE (CSC)',
+                'SCH - OH - NY':  'IESO',
+                'SCH - PJ - NY':  'PJM KEYSTONE',
+                'SCH - PJM_HTP':  'PJM HUDSON TP',
+                'SCH - PJM_NEPTUNE':'PJM NEPTUNE',
+                'SCH - PJM_VFT': 'PJM LINDEN VFT'}
 
-    
 if __name__ == '__main__':
-    #construct_all_databases()
-    
-    #Construct all db
-    #for year in ['2020','2019','2013']:
-    #    construct_all_databases(year,reconstruct=True)
-
-    df = NYISOData(dataset='interface_flows_5m', year='2013', reconstruct=True).df
+    years = ['2013','2019','2020']
+    datasets = supported_datasets
+    construct_databases(years=years, datasets=datasets, reconstruct=True)
+     
