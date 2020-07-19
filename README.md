@@ -23,7 +23,7 @@ df = df.tz_localize('US/Eastern')
 
 #Construct all available datasets for certain years
 years = ['2013','2019','2020']
-datasets = supported_datasets # or datasets = ['interface_flows_5m']
+datasets = ['load_h','interface_flows_5m']
 NYISOData.construct_databases(years=years, datasets=datasets, reconstruct=True)
 ```
 
