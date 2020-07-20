@@ -1,2 +1,5 @@
 *.csv
+.idea/*
+venv/*
 *.pkl
+
