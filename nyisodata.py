@@ -6,15 +6,10 @@ import requests, zipfile, io
 from datetime import datetime, timedelta
 import pytz
 
-SUPPORTED_DATASETS = ['load_h', 'load_5m',
-                      'fuel_mix_5m',
-                      'interface_flows_5m']
-
-
 class NYISOData:
     
     def __init__(self, dataset, year,
-                 reconstruct=False, storage_dir=pl.Path('__file__').resolve().parent):
+                 reconstruct=False, create_csvs=False, storage_dir=pl.Path(__file__).resolve().parent):
         """
         Creates a local database based on dataset name and year stored in UTC.
         
@@ -22,6 +17,7 @@ class NYISOData:
             - dataset: name of dataset need 
             - year: Year of data needed (in Eastern Time)
             - reconstruct: If true, redownload NYISO data and reconstruct database
+            - create_csvs: whether to also save the databases as csvs (pickle dbs are used because they maintain frequency and timezone information)
             - storage_dir: The directory that the raw csvs and databases will be stored
         """
         
@@ -30,6 +26,7 @@ class NYISOData:
         self.dataset = dataset #name of dataset
         self.year = str(year) #force to be string if not already
         self.curr_date = datetime.now(tz=pytz.timezone('US/Eastern')) #datetime object for current time
+        self.create_csvs=create_csvs #if false will oncreate pickle dbs
         
         self.storage_dir = storage_dir #where databases and raw csvs will be stored
         self.download_dir = None # directory that raw csv will be extracted to
@@ -51,7 +48,7 @@ class NYISOData:
         self.dataset_url_map = {'load_5m':{
                                    'type':'load', #dataset type
                                    'url':'{}pal/{}pal_csv.zip'.format(base_url,{}),
-                                   'f'  :'5T',
+                                   'f':'5T',
                                    'col':'Name', #csv column containing regions
                                    'val_col':'Load'}, # csv column containing values
                                'load_h':{
@@ -85,10 +82,7 @@ class NYISOData:
         
     def main(self, reconstruct): 
         """Decides whether to download new data and (re)make database or just read existing one."""
-        
         #Check whether to get new data and construct new DB
-        file_ = pl.Path(self.output_dir, f'{self.year}_{self.dataset}.csv')
-
         if not file_.exists() or reconstruct:
             self.get_raw_data()
             self.construct_database()
@@ -96,7 +90,6 @@ class NYISOData:
             print(f'{file_.name} exists')
             self.df = pd.read_csv(file_, index_col=0)
             self.df.index = pd.to_datetime(self.df.index, utc=True) # set the time zone
-            
         print('Done\n')
             
     def get_raw_data(self):
@@ -185,7 +178,7 @@ class NYISOData:
                 df = pd.concat(frames)
                 #check if the number of regions/interface flow name are equal
                 if not (len(set(df[self.col].value_counts().values)) <= 1): 
-                    print('Warning: There seems to be underlying missing data.')
+                    print('Warning: There seems to be underlying missing data.\n{}'.format(df[self.col].value_counts()))
                 
             if self.type == 'load':
                 df['NYCA'] = df.sum(axis='columns') #Calculate statewide load based on interpolated values
@@ -202,7 +195,9 @@ class NYISOData:
             assert ~df.isnull().values.any(), 'NANs Found! Resampling and interpolation should have handled this.'
             #Save and return dataset in UTC
             df = df.tz_convert('UTC')
-            df.to_csv(pl.Path(self.output_dir,'{}_{}.csv'.format(self.year, self.dataset)))
+            df.to_pickle(pl.Path(self.output_dir,'{}_{}.pkl'.format(self.year, self.dataset))) #pickle will contains timezone and frequency information
+            if self.create_csvs:
+                df.to_csv(pl.Path(self.output_dir,'{}_{}.csv'.format(self.year, self.dataset)))
             self.df = df
             
 def check_and_interpolate_nans(df):
@@ -214,11 +209,11 @@ def check_and_interpolate_nans(df):
         print('Yay! No interpolation was needed.')
     return df
 
-def construct_databases(years, datasets, reconstruct=False):
+def construct_databases(years, datasets, reconstruct=False, create_csvs=False):
     """Constructs all Databases for current year"""
     for dataset in datasets:
         for year in years:
-            NYISOData(dataset=dataset, year=year, reconstruct=reconstruct)
+            NYISOData(dataset=dataset, year=year, reconstruct=reconstruct, create_csvs=create_csvs)
            
 E_TFLOWS_MAP = {'SCH - HQ - NY': 'HQ CHATEAUGUAY',
                 'SCH - HQ_CEDARS': 'HQ CEDARS',
@@ -232,8 +227,11 @@ E_TFLOWS_MAP = {'SCH - HQ - NY': 'HQ CHATEAUGUAY',
                 'SCH - PJM_NEPTUNE':'PJM NEPTUNE',
                 'SCH - PJM_VFT': 'PJM LINDEN VFT'}
 
+SUPPORTED_DATASETS = ['load_h', 'load_5m',
+                      'fuel_mix_5m',
+                      'interface_flows_5m']
+
 if __name__ == '__main__':
-    years = ['2013','2019','2020']
+    years = ['2013','2019']
     datasets = SUPPORTED_DATASETS
     construct_databases(years=years, datasets=datasets, reconstruct=True)
-     
