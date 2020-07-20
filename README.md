@@ -5,6 +5,7 @@ Source: http://mis.nyiso.com/public/
 Datasets Currently Supported:
 - load_h  (hourly load by NYISO region)
 - load_5m (5-min load by NYISO region)
+- load_forecast_h (hourly load forecast by NYISO region)
 - fuel_mix_5m (5-min frequency)
 - interface_flows_5m (5-min internal and external flows between regions)
 
@@ -41,6 +42,12 @@ Actual loads are calculated as generation plus net interchange for each zone, ba
 - Units: Power [MW]
 - Frequency: 5-min
 - Datetime Convention: End of 5 mins (That's what I interpreted from the timing of release of realtime data)
+
+Load Forecast (load_forecast_h)
+- "Weather forecast information grouped by zone is input into a neural network forecaster tool to produce a preliminary zonal load forecast for each hour of the following day. The tool makes use of historical load and weather patterns." (NYISO Market Participant Guide p.25)
+- Units: Power [MW]
+- Frequency: Hour
+- Datetime Convention: Start of hour
 
 Fuel Mix (fuel_mix_5m)
 - Units: Power [MW]

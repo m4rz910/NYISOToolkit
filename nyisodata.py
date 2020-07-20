@@ -21,7 +21,7 @@ class NYISOData:
             - storage_dir: The directory that the raw csvs and databases will be stored
         """
         
-        print('Working on {} for {}...'.format(dataset,year))
+        print(f'Working on {dataset} for {year}...')
         self.df = None #dataframe containing dataset of choice
         self.dataset = dataset #name of dataset
         self.year = str(year) #force to be string if not already
@@ -47,25 +47,31 @@ class NYISOData:
         base_url = 'http://mis.nyiso.com/public/csv/'
         self.dataset_url_map = {'load_5m':{
                                    'type':'load', #dataset type
-                                   'url':'{}pal/{}pal_csv.zip'.format(base_url,{}),
+                                   'url':'{}pal/{}pal_csv.zip'.format(base_url,'{}'),
                                    'f':'5T',
                                    'col':'Name', #csv column containing regions
                                    'val_col':'Load'}, # csv column containing values
                                'load_h':{
                                    'type':'load',
-                                   'url':'{}palIntegrated/{}palIntegrated_csv.zip'.format(base_url,{}),
+                                   'url':'{}palIntegrated/{}palIntegrated_csv.zip'.format(base_url,'{}'),
                                    'f':'H',
                                    'col':'Name', #csv column containing regions
                                    'val_col':'Integrated Load'},
+                               'load_forecast_h':{
+                                   'type':'load_forecast',
+                                   'url':'{}isolf/{}isolf_csv.zip'.format(base_url,'{}'),
+                                   'f':'H',
+                                   'col':None, #used to indicate when no column pivot is necessary
+                                   'val_col':None},
                                'fuel_mix_5m':{
                                    'type':'fuel_mix',
-                                   'url':'{}rtfuelmix/{}rtfuelmix_csv.zip'.format(base_url,{}),
+                                   'url':'{}rtfuelmix/{}rtfuelmix_csv.zip'.format(base_url,'{}'),
                                    'f':'5T',
                                    'col':'Fuel Category',
                                    'val_col':'Gen MW'},
                                'interface_flows_5m':{
                                    'type':'interface_flows',
-                                   'url':'{}ExternalLimitsFlows/{}ExternalLimitsFlows_csv.zip'.format(base_url,{}),
+                                   'url':'{}ExternalLimitsFlows/{}ExternalLimitsFlows_csv.zip'.format(base_url,'{}'),
                                    'f':'5T',
                                    'col':'Interface Name',
                                    'val_col':'Flow (MWH)'}}
@@ -82,7 +88,9 @@ class NYISOData:
         
     def main(self, reconstruct): 
         """Decides whether to download new data and (re)make database or just read existing one."""
+    
         #Check whether to get new data and construct new DB
+        file_ = pl.Path(self.output_dir,f'{self.year}_{self.dataset}.pkl')
         if not file_.exists() or reconstruct:
             self.get_raw_data()
             self.construct_database()
@@ -116,7 +124,7 @@ class NYISOData:
                 z = zipfile.ZipFile(io.BytesIO(r.content))
                 z.extractall(self.download_dir)
             else:
-                print('Warning: Request failed for {}\n{}'.format(month, r.status_code))
+                print(f'Warning: Request failed for {month}\n{r.status_code}')
                 #todo: add reason
     
     def construct_database(self):
@@ -155,17 +163,21 @@ class NYISOData:
             df.index = pd.to_datetime(df.index)
             
             # Create 'Time Zone' column if the csv files don't include one
-            if 'Time Zone' in df.columns:
+            # If self.col is None then there is no need to pivot
+            if ('Time Zone' in df.columns) or (self.col == None):
                 #Make index timezone aware (US/Eastern)
-                df = df.tz_localize('US/Eastern', ambiguous=df['Time Zone']=='EST')
+                if 'Time Zone' in df.columns:
+                    df = df.tz_localize('US/Eastern', ambiguous=df['Time Zone']=='EST')
+                elif (self.col == None):
+                    df = df.tz_localize('US/Eastern', ambiguous='infer')
                 df = df.sort_index(axis='index').tz_convert('UTC')
                 #Convert to UTC so that pivot can work without throwing error for duplicate indices (due to
                 df = check_and_interpolate_nans(df)
-                df = df.pivot(columns=self.col, values=self.val_col) # make columns
+                if 'Time Zone' in df.columns:
+                    df = df.pivot(columns=self.col, values=self.val_col) # make columns                    
                 print('Resampling...')
                 df = df.resample(self.f).mean()     
                 df = check_and_interpolate_nans(df)
-                
             else:
                 frames = []
                 for ctype, subdf in df.groupby(by=self.col):
@@ -210,7 +222,7 @@ def check_and_interpolate_nans(df):
     return df
 
 def construct_databases(years, datasets, reconstruct=False, create_csvs=False):
-    """Constructs all Databases for current year"""
+    """Constructs all databases for selected years"""
     for dataset in datasets:
         for year in years:
             NYISOData(dataset=dataset, year=year, reconstruct=reconstruct, create_csvs=create_csvs)
@@ -227,7 +239,7 @@ E_TFLOWS_MAP = {'SCH - HQ - NY': 'HQ CHATEAUGUAY',
                 'SCH - PJM_NEPTUNE':'PJM NEPTUNE',
                 'SCH - PJM_VFT': 'PJM LINDEN VFT'}
 
-SUPPORTED_DATASETS = ['load_h', 'load_5m',
+SUPPORTED_DATASETS = ['load_h', 'load_5m','load_forecast_h',
                       'fuel_mix_5m',
                       'interface_flows_5m']
 
@@ -235,3 +247,4 @@ if __name__ == '__main__':
     years = ['2013','2019']
     datasets = SUPPORTED_DATASETS
     construct_databases(years=years, datasets=datasets, reconstruct=True)
+    
