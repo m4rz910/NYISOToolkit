@@ -12,6 +12,7 @@ Datasets Currently Supported:
 All datasets...
 - Timezone: Coordinated Universal Time [UTC]
 - Frequency: Hourly or 5-mins. The raw data sometimes has higher or lower frequency than intended, but this library uses mean values to resample at the intended frequency. When interpolations are necessary, they are made. Some datasets only come in one frequency.
+- Datetime Convention: Refers to whether the value(s)/measurement(s) associated with each timestamp occurred in the time period before (end) or after (start).
 
 # Usage Example
 ```python
