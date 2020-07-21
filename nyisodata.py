@@ -20,7 +20,6 @@ class NYISOData:
             - create_csvs: whether to also save the databases as csvs (pickle dbs are used because they maintain frequency and timezone information)
             - storage_dir: The directory that the raw csvs and databases will be stored
         """
-        
         print(f'Working on {dataset} for {year}...')
         self.df = None #dataframe containing dataset of choice
         self.dataset = dataset #name of dataset
@@ -43,7 +42,6 @@ class NYISOData:
         
     def config(self):
         """Sets important class attributes and creates directories for storing files"""
-        
         base_url = 'http://mis.nyiso.com/public/csv/'
         self.dataset_url_map = {'load_5m':{
                                    'type':'load', #dataset type
@@ -88,7 +86,6 @@ class NYISOData:
         
     def main(self, reconstruct): 
         """Decides whether to download new data and (re)make database or just read existing one."""
-    
         #Check whether to get new data and construct new DB
         file_ = pl.Path(self.output_dir,f'{self.year}_{self.dataset}.pkl')
         if not file_.exists() or reconstruct:
@@ -102,7 +99,6 @@ class NYISOData:
             
     def get_raw_data(self):
         """Downloads raw CSV's from NYISO Website"""
-        
         #Determine correct months to download
         print('Downloading Data from NYISO...')
         if self.curr_date.year == int(self.year):
@@ -162,7 +158,6 @@ class NYISOData:
             df = pd.concat(frames, sort=False)
             df.index = pd.to_datetime(df.index)
             
-            # Create 'Time Zone' column if the csv files don't include one
             # If self.col is None then there is no need to pivot
             if ('Time Zone' in df.columns) or (self.col == None):
                 #Make index timezone aware (US/Eastern)
@@ -178,6 +173,7 @@ class NYISOData:
                 print('Resampling...')
                 df = df.resample(self.f).mean()     
                 df = check_and_interpolate_nans(df)
+            #When there is no timezone column and there is 'stacked' data
             else:
                 frames = []
                 for ctype, subdf in df.groupby(by=self.col):
