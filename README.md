@@ -83,7 +83,7 @@ Interface Flows (interface_flows_5m)
     - WEST CENTRAL
 
 ```python
-#The following map is used to mapn datafile external interface names and those on the website
+#The following map is used to map datafile external interface names and those on the website
 external_tflows_map = {'SCH - HQ - NY': 'HQ CHATEAUGUAY',
                        'SCH - HQ_CEDARS': 'HQ CEDARS',
                        'SCH - HQ_IMPORT_EXPORT': 'HQ NET',
@@ -96,5 +96,3 @@ external_tflows_map = {'SCH - HQ - NY': 'HQ CHATEAUGUAY',
                        'SCH - PJM_NEPTUNE':'PJM NEPTUNE',
                        'SCH - PJM_VFT': 'PJM LINDEN VFT'}     
 ```
-
-
