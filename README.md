@@ -10,7 +10,7 @@ Datasets Currently Supported:
 - interface_flows_5m (5-min internal and external flows between regions)
 
 All datasets...
-- Values: Power [MW]
+- Values: Power [MW] (Exception: Interface Flows [MWh])
 - Timezone: Coordinated Universal Time [UTC]
 - Frequency: Hourly or 5-mins. The raw data sometimes has higher or lower frequency than intended, but this library uses mean values to resample at the intended frequency. When interpolations are necessary, they are made. Some datasets only come in one frequency.
 
