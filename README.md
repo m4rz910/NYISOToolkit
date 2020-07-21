@@ -10,7 +10,6 @@ Datasets Currently Supported:
 - interface_flows_5m (5-min internal and external flows between regions)
 
 All datasets...
-- Values: Power [MW] (Exception: Interface Flows [MWh])
 - Timezone: Coordinated Universal Time [UTC]
 - Frequency: Hourly or 5-mins. The raw data sometimes has higher or lower frequency than intended, but this library uses mean values to resample at the intended frequency. When interpolations are necessary, they are made. Some datasets only come in one frequency.
 
@@ -25,7 +24,7 @@ df = df.tz_localize('US/Eastern')
 #Construct all available datasets for certain years
 years = ['2013','2019','2020']
 datasets = ['load_h','interface_flows_5m']
-NYISOData.construct_databases(years=years, datasets=datasets, reconstruct=True)
+NYISOData.construct_databases(years=years, datasets=datasets, reconstruct=True, create_csvs=False)
 ```
 
 # Dataset Information
@@ -56,7 +55,7 @@ Fuel Mix (fuel_mix_5m)
 
 Interface Flows (interface_flows_5m)
 - "Internal/ External Interface Limits and Flows consist of hourly limits (for all major internal interfaces, HQ, NE, PJM, and OH) and flows (for HQ, NE, PJM, and OH) in SCUC and time-weighted average hourly flows (for the same interfaces) in RTD. The data is posted at least day-after or sooner." (NYISO Market Participant Guide p.59)
-- Units: Energy [MWh]
+- Units: Power [MW] (Note: The raw datafile column is mislabled as MWH, but it is correct on the NYISO Dashboard)
 - Frequency: 5-min
 - Datetime Convention: End of 5-min (interpreted from the timing of release of realtime data)
 

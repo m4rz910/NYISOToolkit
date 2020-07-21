@@ -72,7 +72,7 @@ class NYISOData:
                                    'url':'{}ExternalLimitsFlows/{}ExternalLimitsFlows_csv.zip'.format(base_url,'{}'),
                                    'f':'5T',
                                    'col':'Interface Name',
-                                   'val_col':'Flow (MWH)'}}
+                                   'val_col':'Flow (MWH)'}} #note, the column has actual units of MW, fixed in output
         self.type = self.dataset_url_map[self.dataset]['type']
         self.f = self.dataset_url_map[self.dataset]['f']
         self.col = self.dataset_url_map[self.dataset]['col']
@@ -93,8 +93,7 @@ class NYISOData:
             self.construct_database()
         else:
             print(f'{file_.name} exists')
-            self.df = pd.read_csv(file_, index_col=0)
-            self.df.index = pd.to_datetime(self.df.index, utc=True) # set the time zone
+            self.df = pd.read_pickle(file_)
         print('Done\n')
             
     def get_raw_data(self):
@@ -193,6 +192,9 @@ class NYISOData:
             if self.type == 'interface_flows':
                 #remap external interface names to match website
                 df['Interface Name'] = df['Interface Name'].map(E_TFLOWS_MAP).fillna(df['Interface Name'])
+                df = df.rename(columns={'Flow (MWH)':'Flow (MW)', 
+                                        'Postitive Limit (MWH)':'Postitive Limit (MW)',
+                                        'Negative Limit (MWH)':'Negative Limit (MW)'})
                 
             #Convert back to US/Eastern to select time period based on local time
             df = df.tz_convert('US/Eastern') 
@@ -242,5 +244,4 @@ SUPPORTED_DATASETS = ['load_h', 'load_5m','load_forecast_h',
 if __name__ == '__main__':
     years = ['2013','2019']
     datasets = SUPPORTED_DATASETS
-    construct_databases(years=years, datasets=datasets, reconstruct=True)
-    
+    construct_databases(years=years, datasets=datasets, reconstruct=True, create_csvs=False)
