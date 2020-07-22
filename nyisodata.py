@@ -128,19 +128,17 @@ class NYISOData:
         self.curr_date = datetime.now(tz=pytz.timezone('US/Eastern')) #update current time after download
         #If the requested year's data is the current year, then get partial dataset
         if self.curr_date.year == int(self.year):
+            start = '{}-01-01 00:00:00'.format(self.year)
             if self.f == '5T':
-                start = '{}-01-01 00:05:00'.format(self.year) #Datetime Convention: End
                 end   =  (self.curr_date + timedelta(hours=-1)).strftime('%Y-%m-%d %H:00:00') #todo: get latest minute info
             elif self.f == 'H':
-                start = '{}-01-01 00:00:00'.format(self.year) #Datetime Convention: Start
                 end   = (self.curr_date + timedelta(hours=-1)).strftime('%Y-%m-%d %H:00:00')
         #If previous year data is requested get the full year's dataset
         elif self.curr_date.year > int(self.year):
+            start = '{}-01-01 00:00:00'.format(self.year)
             if self.f == '5T':
-                start = '{}-01-01 00:05:00'.format(self.year) 
-                end   = '{}-01-01 00:00:00'.format(int(self.year)+1)
+                end   = '{}-12-31 23:55:00'.format(self.year)
             elif self.f == 'H':
-                start = '{}-01-01 00:00:00'.format(self.year) 
                 end   = '{}-12-31 23:00:00'.format(self.year)
         else:
             assert False, 'A year larger than the current year was queried!'
@@ -191,7 +189,7 @@ class NYISOData:
                 df['NYCA'] = df.sum(axis='columns') #Calculate statewide load based on interpolated values
             if self.type == 'interface_flows':
                 #remap external interface names to match website
-                df['Interface Name'] = df['Interface Name'].map(E_TFLOWS_MAP).fillna(df['Interface Name'])
+                df['Interface Name'] = df['Interface Name'].map(EXTERNAL_TFLOWS_MAP).fillna(df['Interface Name'])
                 df = df.rename(columns={'Flow (MWH)':'Flow (MW)', 
                                         'Postitive Limit (MWH)':'Postitive Limit (MW)',
                                         'Negative Limit (MWH)':'Negative Limit (MW)'})
@@ -225,23 +223,22 @@ def construct_databases(years, datasets, reconstruct=False, create_csvs=False):
         for year in years:
             NYISOData(dataset=dataset, year=year, reconstruct=reconstruct, create_csvs=create_csvs)
            
-E_TFLOWS_MAP = {'SCH - HQ - NY': 'HQ CHATEAUGUAY',
-                'SCH - HQ_CEDARS': 'HQ CEDARS',
-                'SCH - HQ_IMPORT_EXPORT': 'HQ NET',
-                'SCH - NE - NY':  'NPX NEW ENGLAND (NE)',
-                'SCH - NPX_1385': 'NPX 1385 NORTHPORT (NNC)',
-                'SCH - NPX_CSC':  'NPX CROSS SOUND CABLE (CSC)',
-                'SCH - OH - NY':  'IESO',
-                'SCH - PJ - NY':  'PJM KEYSTONE',
-                'SCH - PJM_HTP':  'PJM HUDSON TP',
-                'SCH - PJM_NEPTUNE':'PJM NEPTUNE',
-                'SCH - PJM_VFT': 'PJM LINDEN VFT'}
+EXTERNAL_TFLOWS_MAP = {'SCH - HQ - NY': 'HQ CHATEAUGUAY',
+                        'SCH - HQ_CEDARS': 'HQ CEDARS',
+                        'SCH - HQ_IMPORT_EXPORT': 'HQ NET',
+                        'SCH - NE - NY':  'NPX NEW ENGLAND (NE)',
+                        'SCH - NPX_1385': 'NPX 1385 NORTHPORT (NNC)',
+                        'SCH - NPX_CSC':  'NPX CROSS SOUND CABLE (CSC)',
+                        'SCH - OH - NY':  'IESO',
+                        'SCH - PJ - NY':  'PJM KEYSTONE',
+                        'SCH - PJM_HTP':  'PJM HUDSON TP',
+                        'SCH - PJM_NEPTUNE':'PJM NEPTUNE',
+                        'SCH - PJM_VFT': 'PJM LINDEN VFT'}
 
 SUPPORTED_DATASETS = ['load_h', 'load_5m','load_forecast_h',
-                      'fuel_mix_5m',
-                      'interface_flows_5m']
+                      'interface_flows_5m','fuel_mix_5m']
 
 if __name__ == '__main__':
-    years = ['2013','2019']
+    years = ['2019','2013']
     datasets = SUPPORTED_DATASETS
     construct_databases(years=years, datasets=datasets, reconstruct=True, create_csvs=False)
