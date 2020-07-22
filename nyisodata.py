@@ -20,7 +20,7 @@ class NYISOData:
             - create_csvs: whether to also save the databases as csvs (pickle dbs are used because they maintain frequency and timezone information)
             - storage_dir: The directory that the raw csvs and databases will be stored
         """
-        print(f'Working on {dataset} for {year}...')
+        print(f'Working on {dataset} for {year}')
         self.df = None #dataframe containing dataset of choice
         self.dataset = dataset #name of dataset
         self.year = str(year) #force to be string if not already
@@ -101,16 +101,14 @@ class NYISOData:
         #Determine correct months to download
         print('Downloading Data from NYISO...')
         if self.curr_date.year == int(self.year):
-            month_range = pd.date_range(start= '{}-01-01'.format(self.year),
-                                        end  = '{}-{}-01'.format(self.curr_date.year, self.curr_date.month),
-                                        freq = 'MS').strftime('%Y%m%d') # NYISO are labled based on month start)
+            end = '{}-{}-01'.format(self.curr_date.year, self.curr_date.month)
         elif self.curr_date.year > int(self.year):
-            month_range = pd.date_range(start= '{}-01-01'.format(self.year),
-                                        end  = '{}-01-01'.format(int(self.year)+1),
-                                        freq = 'MS').strftime('%Y%m%d')
+            end ='{}-01-01'.format(int(self.year)+1)
         else:
             assert False, 'Error: Year greater than current year entered'
-        
+        month_range = pd.date_range(start= '{}-12-01'.format(int(self.year)-1), #get month before
+                                    end  = end,
+                                    freq = 'MS').strftime('%Y%m%d') # NYISO are labled based on month start)
         #Download and extract all csv files month by month
         dataset_url = self.dataset_url_map[self.dataset]['url']
         for month in month_range: 
@@ -148,7 +146,8 @@ class NYISOData:
         print('Constructing DB...')
         files = sorted(pl.Path(self.download_dir).glob('*.csv'))
         if not files:
-            assert False, 'No raw datafiles found!'
+            print('Warning: No raw datafiles found!')
+            return #skip the rest
         else:
             #Concatenate all CSVs into a DataFrame
             frames = [pd.read_csv(file, index_col=0) for file in files]
@@ -164,14 +163,15 @@ class NYISOData:
                     df = df.tz_localize('US/Eastern', ambiguous='infer')
                 df = df.sort_index(axis='index').tz_convert('UTC')
                 #Convert to UTC so that pivot can work without throwing error for duplicate indices (due to
-                df = check_and_interpolate_nans(df)
                 if 'Time Zone' in df.columns:
+                    print('Pivoting Data...')
                     df = df.pivot(columns=self.col, values=self.val_col) # make columns                    
                 print('Resampling...')
                 df = df.resample(self.f).mean()     
                 df = check_and_interpolate_nans(df)
             #When there is no timezone column and there is 'stacked' data
             else:
+                print('Data is stacked. Pivoting and resampling each section...')
                 frames = []
                 for ctype, subdf in df.groupby(by=self.col):
                     subdf = subdf.tz_localize('US/Eastern', ambiguous='infer').tz_convert('UTC')
@@ -182,7 +182,7 @@ class NYISOData:
                     frames.append(subdf)
                 df = pd.concat(frames)
                 #check if the number of regions/interface flow name are equal
-                if not (len(set(df[self.col].value_counts().values)) <= 1): 
+                if not (len(set(df[self.col].value_counts().values)) <= 1):
                     print('Warning: There seems to be underlying missing data.\n{}'.format(df[self.col].value_counts()))
                 
             if self.type == 'load':
@@ -213,8 +213,6 @@ def check_and_interpolate_nans(df):
     if df.isnull().values.any(): 
         print('Note: {} Nans found... interpolating'.format(df.isna().sum().sum()))
         df.interpolate(method='linear', inplace=True)
-    else:
-        print('Yay! No interpolation was needed.')
     return df
 
 def construct_databases(years, datasets, reconstruct=False, create_csvs=False):
