@@ -2,8 +2,7 @@
 
 from nyisodata import NYISOData
 
-def test_interface_flows():
-    return NYISOData(dataset='interface_flows_5m', year='2013', reconstruct=True).df
-
 if __name__ == '__main__':
-    df = test_interface_flows()
+    #df = NYISOData(dataset='interface_flows_5m', year='2013', reconstruct=True).df
+    df = NYISOData(dataset='lbmp_dam_h', year='2019', reconstruct=False).df
+    df = NYISOData(dataset='lbmp_rt_5m', year='2019', reconstruct=False).df

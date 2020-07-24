@@ -72,7 +72,19 @@ class NYISOData:
                                    'url':'{}ExternalLimitsFlows/{}ExternalLimitsFlows_csv.zip'.format(base_url,'{}'),
                                    'f':'5T',
                                    'col':'Interface Name',
-                                   'val_col':'Flow (MWH)'}} #note, the column has actual units of MW, fixed in output
+                                   'val_col':'Flow (MWH)'},
+                               'lbmp_dam_h':{
+                                   'type':'lbmp',
+                                   'url':'{}damlbmp/{}damlbmp_zone_csv.zip'.format(base_url,'{}'),
+                                   'f':'H',
+                                   'col':'Name',
+                                   'val_col':None},
+                               'lbmp_rt_5m':{
+                                   'type':'lbmp',
+                                   'url':'{}realtime/{}realtime_zone_csv.zip'.format(base_url,'{}'),
+                                   'f':'5T',
+                                   'col':'Name',
+                                   'val_col':None}} #note, the column has actual units of MW, fixed in output
         self.type = self.dataset_url_map[self.dataset]['type']
         self.f = self.dataset_url_map[self.dataset]['f']
         self.col = self.dataset_url_map[self.dataset]['col']
@@ -171,11 +183,10 @@ class NYISOData:
                 df = check_and_interpolate_nans(df)
             #When there is no timezone column and there is 'stacked' data
             else:
-                print('Data is stacked. Pivoting and resampling each section...')
+                print('Data is stacked...')
                 frames = []
                 for ctype, subdf in df.groupby(by=self.col):
                     subdf = subdf.tz_localize('US/Eastern', ambiguous='infer').tz_convert('UTC')
-                    print('Resampling...')
                     subdf = subdf.resample(self.f).mean()     
                     subdf = check_and_interpolate_nans(subdf)
                     subdf.loc[:,self.col] = ctype

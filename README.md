@@ -8,6 +8,8 @@ Datasets Currently Supported:
 - load_forecast_h (hourly load forecast by NYISO region)
 - fuel_mix_5m (5-min frequency)
 - interface_flows_5m (5-min internal and external flows between regions)
+- lbmp_dam_h (hourly day-ahead zonal location based marginal price)
+- lbmp_rt_5m (5-min reak time zonal location based marginal price)
 
 All datasets...
 - Timezone: Coordinated Universal Time [UTC]
@@ -91,3 +93,12 @@ external_tflows_map = {'SCH - HQ - NY': 'HQ CHATEAUGUAY',
                        'SCH - PJM_NEPTUNE':'PJM NEPTUNE',
                        'SCH - PJM_VFT': 'PJM LINDEN VFT'}     
 ```
+LBMP (lbmp_dam_h)
+- NYISO Market Participant Guide
+- Units: Price [$/MWh]
+- Frequency: Hour
+
+LBMP (lbmp_rt_5m)
+- NYISO Market Participant Guide
+- Units: Price [$/MWh]
+- Frequency: Hour
