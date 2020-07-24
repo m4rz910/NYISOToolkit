@@ -10,9 +10,9 @@ Datasets Currently Supported:
 - interface_flows_5m (5-min internal and external flows between regions)
 
 All datasets...
-- Values: Power [MW] (Exception: Interface Flows [MWh])
 - Timezone: Coordinated Universal Time [UTC]
 - Frequency: Hourly or 5-mins. The raw data sometimes has higher or lower frequency than intended, but this library uses mean values to resample at the intended frequency. When interpolations are necessary, they are made. Some datasets only come in one frequency.
+- Datetime Convention: Start. The value(s)/measurement(s) associated with each timestamp occurred in the time period before the start o the next timestamp.
 
 # Usage Example
 ```python
@@ -20,12 +20,12 @@ from nyisodata import NYISOData
 df = NYISOData(dataset='load_h', year='2019').df # year argument in local time, but returns dataset in UTC 
 
 #If you need to work with data in local time, then convert time zone
-df = df.tz_localize('US/Eastern')
+df = df.tz_convert('US/Eastern')
 
 #Construct all available datasets for certain years
 years = ['2013','2019','2020']
 datasets = ['load_h','interface_flows_5m']
-NYISOData.construct_databases(years=years, datasets=datasets, reconstruct=True)
+NYISOData.construct_databases(years=years, datasets=datasets, reconstruct=True, create_csvs=False)
 ```
 
 # Dataset Information
@@ -34,31 +34,26 @@ Load (load_h)
 - "Integrated Real-Time Actual Load is posted after each hour and represents the timeweighted hourly load for each zone" (NYISO Market Participant Guide p.62)
 - Units: Power [MW]
 - Frequency: Hour
-- Datetime Convention: Start of hour
 
 Load (load_5m)
 - "Real-Time Actual Load posts the actual measured load for each RTD interval (5 minutes) by zone. 
 Actual loads are calculated as generation plus net interchange for each zone, based on real-time telemetered data." (NYISO Market Participant Guide p.62)
 - Units: Power [MW]
 - Frequency: 5-min
-- Datetime Convention: End of 5 mins (interpreted from the timing of release of realtime data)
 
 Load Forecast (load_forecast_h)
 - "Weather forecast information grouped by zone is input into a neural network forecaster tool to produce a preliminary zonal load forecast for each hour of the following day. The tool makes use of historical load and weather patterns." (NYISO Market Participant Guide p.25)
 - Units: Power [MW]
 - Frequency: Hour
-- Datetime Convention: Start of hour
 
 Fuel Mix (fuel_mix_5m)
 - Units: Power [MW]
 - Frequency: 5-min
-- Datetime convention: End of 5-min (interpreted from the timing of release of realtime data)
 
 Interface Flows (interface_flows_5m)
 - "Internal/ External Interface Limits and Flows consist of hourly limits (for all major internal interfaces, HQ, NE, PJM, and OH) and flows (for HQ, NE, PJM, and OH) in SCUC and time-weighted average hourly flows (for the same interfaces) in RTD. The data is posted at least day-after or sooner." (NYISO Market Participant Guide p.59)
-- Units: Energy [MWh]
+- Units: Power [MW] (Note: The raw datafile column is mislabled as MWH, but it is correct on the NYISO Dashboard)
 - Frequency: 5-min
-- Datetime Convention: End of 5-min (interpreted from the timing of release of realtime data)
 
     External Interfaces
     - HQ CHATEAUGUAY
