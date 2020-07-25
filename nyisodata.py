@@ -245,7 +245,8 @@ EXTERNAL_TFLOWS_MAP = {'SCH - HQ - NY': 'HQ CHATEAUGUAY',
                         'SCH - PJM_VFT': 'PJM LINDEN VFT'}
 
 SUPPORTED_DATASETS = ['load_h', 'load_5m','load_forecast_h',
-                      'interface_flows_5m','fuel_mix_5m']
+                      'interface_flows_5m','fuel_mix_5m',
+                      'lbmp_dam_h','lbmp_rt_5m']
 
 if __name__ == '__main__':
     years = ['2019','2013']
