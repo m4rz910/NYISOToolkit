@@ -24,7 +24,7 @@ df = NYISOData(dataset='load_h', year='2019').df # year argument in local time, 
 #If you need to work with data in local time, then convert time zone
 df = df.tz_localize('US/Eastern')
 
-#Construct all available datasets for certain years
+#Construct datasets for certain years
 years = ['2013','2019','2020']
 datasets = ['load_h','interface_flows_5m']
 NYISOData.construct_databases(years=years, datasets=datasets, reconstruct=True, create_csvs=False)
