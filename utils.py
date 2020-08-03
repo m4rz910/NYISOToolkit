@@ -1,5 +1,3 @@
-import datetime
-
 import pandas as pd
 
 
@@ -23,3 +21,16 @@ def fetch_months_to_download(cur_date, input_year):
         end=end_,
         freq='MS'
     ).strftime(output_fmt)
+
+
+def check_and_interpolate_nans(df):
+    """
+    If there are NANs in the data, interpolate
+
+    :df: pandas dataframe to process -> pd.DataFrame
+    """
+    nan_count = df.isna().sum().sum()
+    if nan_count > 0:
+        print(f'Note: {nan_count} Nans found... interpolating')
+        df.interpolate(method='linear', inplace=True)
+    return df

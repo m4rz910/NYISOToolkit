@@ -12,6 +12,9 @@ import zipfile
 import utils
 
 
+BASE_URL = 'http://mis.nyiso.com/public/csv/'
+BRACKETS = "{}"  # for ease
+
 class NYISOData:
 
     def __init__(self, dataset, year,
@@ -48,49 +51,48 @@ class NYISOData:
 
     def config(self):
         """Sets important class attributes and creates directories for storing files"""
-        base_url = 'http://mis.nyiso.com/public/csv/'
-        brackets = "{}"  # for ease
+
         self.dataset_url_map = {
             'load_5m': {
                 'type': 'load',  # dataset type
-                'url': f'{base_url}pal/{brackets}pal_csv.zip',
+                'url': f'{BASE_URL}pal/{BRACKETS}pal_csv.zip',
                 'f': '5T',
                 'col': 'Name',  # csv column containing regions
                 'val_col': 'Load'  # csv column containing values
             },
             'load_h': {
                 'type': 'load',
-                'url': '{}palIntegrated/{}palIntegrated_csv.zip'.format(base_url, '{}'),
+                'url': f'{BASE_URL}palIntegrated/{BRACKETS}palIntegrated_csv.zip',
                 'f': 'H',
                 'col': 'Name',  # csv column containing regions
                 'val_col': 'Integrated Load'},
             'load_forecast_h': {
                 'type': 'load_forecast',
-                'url': '{}isolf/{}isolf_csv.zip'.format(base_url, '{}'),
+                'url': f'{BASE_URL}isolf/{BRACKETS}isolf_csv.zip',
                 'f': 'H',
                 'col': None,  # used to indicate when no column pivot is necessary
                 'val_col': None},
             'fuel_mix_5m': {
                 'type': 'fuel_mix',
-                'url': '{}rtfuelmix/{}rtfuelmix_csv.zip'.format(base_url, '{}'),
+                'url': f'{BASE_URL}rtfuelmix/{BRACKETS}rtfuelmix_csv.zip',
                 'f': '5T',
                 'col': 'Fuel Category',
                 'val_col': 'Gen MW'},
             'interface_flows_5m': {
                 'type': 'interface_flows',
-                'url': '{}ExternalLimitsFlows/{}ExternalLimitsFlows_csv.zip'.format(base_url, '{}'),
+                'url': f'{BASE_URL}ExternalLimitsFlows/{BRACKETS}ExternalLimitsFlows_csv.zip',
                 'f': '5T',
                 'col': 'Interface Name',
                 'val_col': 'Flow (MWH)'},
             'lbmp_dam_h': {
                 'type': 'lbmp',
-                'url': '{}damlbmp/{}damlbmp_zone_csv.zip'.format(base_url, '{}'),
+                'url': f'{BASE_URL}damlbmp/{BRACKETS}damlbmp_zone_csv.zip',
                 'f': 'H',
                 'col': 'Name',
                 'val_col': None},
             'lbmp_rt_5m': {
                 'type': 'lbmp',
-                'url': '{}realtime/{}realtime_zone_csv.zip'.format(base_url, '{}'),
+                'url': f'{BASE_URL}realtime/{BRACKETS}realtime_zone_csv.zip',
                 'f': '5T',
                 'col': 'Name',
                 'val_col': None}}  # note, the column has actual units of MW, fixed in output
@@ -116,7 +118,6 @@ class NYISOData:
             print(f'{file_.name} exists')
             self.df = pd.read_pickle(file_)
         print('Done\n')
-
 
     def get_raw_data(self):
         """Downloads raw CSV's from NYISO Website"""
@@ -183,7 +184,7 @@ class NYISOData:
                     df = df.pivot(columns=self.col, values=self.val_col)  # make columns
                 print('Resampling...')
                 df = df.resample(self.f).mean()
-                df = check_and_interpolate_nans(df)
+                df = utils.check_and_interpolate_nans(df)
             # When there is no timezone column and there is 'stacked' data
             else:
                 print('Data is stacked...')
@@ -191,7 +192,7 @@ class NYISOData:
                 for ctype, subdf in df.groupby(by=self.col):
                     subdf = subdf.tz_localize('US/Eastern', ambiguous='infer').tz_convert('UTC')
                     subdf = subdf.resample(self.f).mean()
-                    subdf = check_and_interpolate_nans(subdf)
+                    subdf = utils.check_and_interpolate_nans(subdf)
                     subdf.loc[:, self.col] = ctype
                     frames.append(subdf)
                 df = pd.concat(frames)
@@ -225,12 +226,7 @@ class NYISOData:
             self.df = df
 
 
-def check_and_interpolate_nans(df):
-    """If there are NANs in the data, interpolate"""
-    if df.isnull().values.any():
-        print('Note: {} Nans found... interpolating'.format(df.isna().sum().sum()))
-        df.interpolate(method='linear', inplace=True)
-    return df
+
 
 
 def construct_databases(years, datasets, reconstruct=False, create_csvs=False):
