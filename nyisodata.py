@@ -121,7 +121,7 @@ class NYISOData:
 
     def get_raw_data(self):
         """Downloads raw CSV's from NYISO Website"""
-        month_range = utils.fetch_months_to_download(self.curr_date.year, self.year)
+        month_range = utils.fetch_months_to_download(self.curr_date, self.year)
 
         # Download and extract all csv files month by month
         print('Downloading Data from NYISO...')
