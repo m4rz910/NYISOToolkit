@@ -1,4 +1,12 @@
+from collections import namedtuple
+
 import pandas as pd
+from plumbum import local
+
+BASE_URL = 'http://mis.nyiso.com/public/csv/'
+YAML_FILE = 'dataset_url_map.yml'
+
+dataset_details = namedtuple('dataset_details', ['dataset', 'type', 'url', 'f', 'col', 'val_col'])
 
 
 def fetch_months_to_download(cur_date, year_to_collect):
@@ -35,3 +43,30 @@ def check_and_interpolate_nans(df):
         print(f'Note: {nan_count} Nans found... interpolating')
         df.interpolate(method='linear', inplace=True)
     return df
+
+
+def fetch_dataset_url_map(dataset):
+    """
+    Reads yaml for dataset and returns namedtuple containing details
+
+    :dataset: name of dataset -> str;
+    """
+    path = local.path(__file__).dirname / YAML_FILE
+    yml = open_yml(path)[dataset]
+
+    return dataset_details(
+        dataset,
+        yml['type'],
+        BASE_URL + yml['url']['pre'] + "/{}" + yml['url']['post'],
+        yml['f'],
+        yml.get('col'),
+        yml.get('val_col')
+    )
+
+
+
+
+def open_yml(filepath_):
+    import yaml
+    with open(filepath_, 'r') as stream:
+        return yaml.safe_load(stream)

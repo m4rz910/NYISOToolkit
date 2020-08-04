@@ -1,8 +1,6 @@
 import datetime
 import pytest
 
-from freezegun import freeze_time
-
 import utils
 
 
@@ -25,19 +23,15 @@ def test_fetch_months_to_download_general():
     assert actual == expected
 
 
-@freeze_time("2020-08-02")
 def test_fetch_months_to_download_bad_input():
-    cur_date = datetime.datetime.now()
-    assert cur_date == datetime.datetime(2020, 8, 2)  # confirm freeztime
+    cur_date = datetime.datetime(2020, 8, 2)
 
     with pytest.raises(AssertionError):
         utils.fetch_months_to_download(cur_date=cur_date, year_to_collect=2021)
 
 
-@freeze_time("2020-08-02")
 def test_test_fetch_months_to_download_same_year():
-    cur_date = datetime.datetime.now()
-    assert cur_date == datetime.datetime(2020, 8, 2)  # confirm freeztime
+    cur_date = datetime.datetime(2020, 8, 2)
 
     expected = [
         '20191201', '20200101', '20200201', '20200301', '20200401', '20200501',
@@ -51,3 +45,21 @@ def test_test_fetch_months_to_download_same_year():
     actual = sorted(actual)
 
     assert actual == expected
+
+
+def test_fetch_dataset_url_map_general():
+    dataset = "lbmp_rt_5m"
+    expected = utils.dataset_details(
+        dataset,
+        'lbmp',
+        utils.BASE_URL + "realtime" + "/{}" + "realtime_zone_csv.zip",
+        "5T",
+        "Name",
+        None
+    )
+    assert utils.fetch_dataset_url_map(dataset) == expected
+
+
+def test_fetch_dataset_url_map_failure():
+    with pytest.raises(KeyError):
+        utils.fetch_dataset_url_map('bad_key')

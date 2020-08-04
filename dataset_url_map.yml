@@ -1,0 +1,62 @@
+load_5m:
+  type: load
+  url:
+    pre: pal
+    post: pal_csv.zip
+  f: 5T
+  col: Name
+  val_col: Load
+            
+load_h: 
+  type: load
+  url:
+    pre: palIntegrated
+    post: palIntegrated_csv.zip
+  f: H
+  col: Name
+  val_col: Integrated Load
+
+load_forecast_h: 
+  type: load_forecast
+  url:
+    pre: isolf
+    post: isolf_csv.zip
+  f: H
+  col: # None
+  val_col: # None
+
+fuel_mix_5m: 
+  type: fuel_mix
+  url:
+    pre: rtfuelmix
+    post: rtfuelmix_csv.zip
+  f: 5T
+  col: Fuel Category
+  val_col: Gen MW
+
+interface_flows_5m: 
+  type: interface_flows
+  url:
+    pre: ExternalLimitsFlows
+    post: ExternalLimitsFlows_csv.zip
+  f: 5T
+  col: Interface Name
+  val_col: Flow (MWH)
+
+lbmp_dam_h: 
+  type: lbmp
+  url:
+    pre: damlbmp
+    post: damlbmp_zone_csv.zip
+  f: H
+  col: Name
+  val_col: # None
+
+lbmp_rt_5m: 
+  type: lbmp
+  url:
+    pre: realtime
+    post: realtime_zone_csv.zip
+  f: 5T
+  col: Name
+  val_col:  # None
