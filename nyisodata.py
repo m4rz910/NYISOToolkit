@@ -12,9 +12,7 @@ import zipfile
 
 import utils
 
-
-BRACKETS = "{}"  # for ease
-
+# TODO actually log things and ensure log file is create/written to
 logging.basicConfig(
     filename="nyiso_data.log",
     filemode='a',
@@ -48,8 +46,8 @@ class NYISOData:
         self.create_csvs = create_csvs  # if false will oncreate pickle dbs
 
         self.storage_dir = storage_dir  # where databases and raw csvs will be stored
-        self.download_dir = None  # directory that raw csv will be extracted to
-        self.output_dir = None  # directory where files will be saved
+        self.download_dir = pl.Path(self.storage_dir, 'raw_datafiles', self.dataset, self.year)  # directory that raw csv will be extracted to
+        self.output_dir = pl.Path(self.storage_dir, 'databases')  # directory where files will be saved
         self.dataset_details = None  # namedtuple containing details
 
         self.config()  # sets some of the class attributes
@@ -58,12 +56,9 @@ class NYISOData:
     def config(self):
         """Sets important instance attributes and creates directories for storing files"""
         self.dataset_details = utils.fetch_dataset_url_map(self.dataset)
-        
-        # Set up download and output folders
-        self.download_dir = pl.Path(self.storage_dir, 'raw_datafiles', self.dataset, self.year)
-        self.output_dir = pl.Path(self.storage_dir, 'databases')
-        for directory in [self.download_dir, self.output_dir]:
-            pl.Path(directory).mkdir(parents=True, exist_ok=True)
+
+        for dir_ in [self.download_dir, self.output_dir]:
+            dir_.mkdir(parents=True, exist_ok=True)
 
     def main(self, reconstruct):
         """Decides whether to download new data and (re)make database or just read existing one."""
@@ -96,24 +91,10 @@ class NYISOData:
         """Constructs database from raw datafiles and saves it in UTC"""
         # Determine expected timestamps for dataset
         self.curr_date = datetime.now(tz=pytz.timezone('US/Eastern'))  # update current time after download
-        # If the requested year's data is the current year, then get partial dataset
-        if self.curr_date.year == int(self.year):
-            start = '{}-01-01 00:00:00'.format(self.year)
-            if self.dataset_details.f == '5T':
-                end = (self.curr_date + timedelta(hours=-1)).strftime(
-                    '%Y-%m-%d %H:00:00')  # todo: get latest minute info
-            elif self.dataset_details.f == 'H':
-                end = (self.curr_date + timedelta(hours=-1)).strftime('%Y-%m-%d %H:00:00')
-        # If previous year data is requested get the full year's dataset
-        elif self.curr_date.year > int(self.year):
-            start = '{}-01-01 00:00:00'.format(self.year)
-            if self.dataset_details.f == '5T':
-                end = '{}-12-31 23:55:00'.format(self.year)
-            elif self.dataset_details.f == 'H':
-                end = '{}-12-31 23:00:00'.format(self.year)
-        else:
-            assert False, 'A year larger than the current year was queried!'
-        timestamps = pd.date_range(start=start, end=end, freq=self.dataset_details.f, tz='US/Eastern')
+
+        timestamps = utils.build_db_ts_range(
+           cur_date=self.curr_date, frequency=self.dataset_details.f, request_year=self.year
+        )
 
         # Construct Database
         print('Constructing DB...')
@@ -155,7 +136,8 @@ class NYISOData:
                 df = pd.concat(frames)
                 # check if the number of regions/interface flow name are equal
                 if not (len(set(df[self.dataset_details.col].value_counts().values)) <= 1):
-                    print('Warning: There seems to be underlying missing data.\n{}'.format(df[self.dataset_details.col].value_counts()))
+                    print('Warning: There seems to be underlying missing data.\n{}'.format(
+                        df[self.dataset_details.col].value_counts()))
 
             if self.dataset_details.type == 'load':
                 df['NYCA'] = df.sum(axis='columns')  # Calculate statewide load based on interpolated values

@@ -1,3 +1,4 @@
+from datetime import timedelta
 from collections import namedtuple
 
 import pandas as pd
@@ -20,7 +21,7 @@ def fetch_months_to_download(cur_date, year_to_collect):
     output_fmt = '%Y%m%d'
 
     if year_to_collect > cur_date.year:
-        assert False, 'Error: Year to collect is greater than current year'
+        raise ValueError('Error: Year to collect is greater than current year')
 
     range_end = f'{cur_date.year}-{cur_date.month}-01' if cur_date.year == year_to_collect \
         else f'{year_to_collect + 1}-01-01'
@@ -64,9 +65,31 @@ def fetch_dataset_url_map(dataset):
     )
 
 
-
-
 def open_yml(filepath_):
     import yaml
     with open(filepath_, 'r') as stream:
         return yaml.safe_load(stream)
+
+
+def build_db_ts_range(cur_date, request_year, frequency):
+    """
+    
+    """
+    request_year = int(request_year)  # fail fast
+    fmt = '%Y-%m-%d %H:00:00'
+    start = f'{request_year}-01-01 00:00:00'
+
+    if frequency not in ['5T', 'H']:
+        raise NotImplementedError("Data frequency chosen is not supported")  # TODO: get dataset
+
+    if request_year == cur_date.year:  # get partial
+        end = (cur_date - timedelta(hours=1)).strftime(fmt)  # todo: get latest minute info
+    elif request_year < cur_date.year:  # get full
+        if frequency == '5T':
+            end = f'{request_year}-12-31 23:55:00'
+        elif frequency == 'H':
+            end = f'{request_year}-12-31 23:00:00'
+    else:
+        raise ValueError('Error: Year to collect is greater than current year')
+
+    return pd.date_range(start=start, end=end, freq=frequency, tz='US/Eastern')

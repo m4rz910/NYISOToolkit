@@ -1,6 +1,8 @@
 import datetime
 import pytest
 
+import pandas as pd
+
 import utils
 
 
@@ -26,7 +28,7 @@ def test_fetch_months_to_download_general():
 def test_fetch_months_to_download_bad_input():
     cur_date = datetime.datetime(2020, 8, 2)
 
-    with pytest.raises(AssertionError):
+    with pytest.raises(ValueError):
         utils.fetch_months_to_download(cur_date=cur_date, year_to_collect=2021)
 
 
@@ -63,3 +65,32 @@ def test_fetch_dataset_url_map_general():
 def test_fetch_dataset_url_map_failure():
     with pytest.raises(KeyError):
         utils.fetch_dataset_url_map('bad_key')
+
+
+def test_build_db_ts_range_general():
+    cur_date = datetime.datetime(2020, 8, 5)
+    request_year = 2019
+    frequency = 'H'
+
+    exp_start = f'{request_year}-01-01 00:00:00'
+    exp_end = f'{request_year}-12-31 23:00:00'
+
+    actual = utils.build_db_ts_range(cur_date, request_year, frequency)
+    expected = pd.date_range(start=exp_start, end=exp_end, freq=frequency, tz='US/Eastern')
+
+    # sort for testing ease
+    expected = sorted(expected)
+    actual = sorted(actual)
+
+    assert actual == expected
+
+
+def test_build_db_ts_range_bad_year():
+    cur_date = datetime.datetime(2020, 8, 5)
+    request_year = 2021
+    frequency = 'H'
+
+    with pytest.raises(ValueError):
+        utils.build_db_ts_range(cur_date=cur_date, request_year=request_year, frequency=frequency)
+
+
