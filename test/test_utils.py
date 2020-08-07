@@ -75,8 +75,8 @@ def test_build_db_ts_range_general():
     exp_start = f'{request_year}-01-01 00:00:00'
     exp_end = f'{request_year}-12-31 23:00:00'
 
-    actual = utils.build_db_ts_range(cur_date, request_year, frequency)
-    expected = pd.date_range(start=exp_start, end=exp_end, freq=frequency, tz='US/Eastern')
+    actual = utils.fetch_ts_start_end(cur_date, request_year, frequency)
+    expected = (exp_start, exp_end)
 
     # sort for testing ease
     expected = sorted(expected)
@@ -87,10 +87,17 @@ def test_build_db_ts_range_general():
 
 def test_build_db_ts_range_bad_year():
     cur_date = datetime.datetime(2020, 8, 5)
-    request_year = 2021
+    request_year = 2021  # later than current
     frequency = 'H'
 
     with pytest.raises(ValueError):
-        utils.build_db_ts_range(cur_date=cur_date, request_year=request_year, frequency=frequency)
+        utils.fetch_ts_start_end(cur_date=cur_date, request_year=request_year, frequency=frequency)
 
 
+def test_build_db_ts_range_unsupported_frequency():
+    cur_date = datetime.datetime(2020, 8, 5)
+    request_year = 2019
+    frequency = 'bad_frequency_string'
+
+    with pytest.raises(NotImplementedError):
+        utils.fetch_ts_start_end(cur_date, request_year, frequency)

@@ -71,16 +71,24 @@ def open_yml(filepath_):
         return yaml.safe_load(stream)
 
 
-def build_db_ts_range(cur_date, request_year, frequency):
+def fetch_ts_start_end(cur_date, request_year, frequency):
     """
-    
+    Determine start and end of range for timestamps
+
+    :cur_date: current date -> datetime.datetime;
+    :request_year: year of data requested -> str, int;
+    :frequency: abbreviation for freq of timestamps in range -> str;
     """
     request_year = int(request_year)  # fail fast
     fmt = '%Y-%m-%d %H:00:00'
     start = f'{request_year}-01-01 00:00:00'
+    end = None
 
     if frequency not in ['5T', 'H']:
         raise NotImplementedError("Data frequency chosen is not supported")  # TODO: get dataset
+
+    if request_year > cur_date.year:
+        raise ValueError('Error: Year to collect is greater than current year')
 
     if request_year == cur_date.year:  # get partial
         end = (cur_date - timedelta(hours=1)).strftime(fmt)  # todo: get latest minute info
@@ -89,7 +97,8 @@ def build_db_ts_range(cur_date, request_year, frequency):
             end = f'{request_year}-12-31 23:55:00'
         elif frequency == 'H':
             end = f'{request_year}-12-31 23:00:00'
-    else:
-        raise ValueError('Error: Year to collect is greater than current year')
 
-    return pd.date_range(start=start, end=end, freq=frequency, tz='US/Eastern')
+    if end is None:
+        raise Exception("We should never get here..")
+
+    return start, end

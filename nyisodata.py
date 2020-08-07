@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import logging
-from datetime import datetime, timedelta
+from datetime import datetime
 
 import io
 import pandas as pd
@@ -11,15 +10,6 @@ import requests
 import zipfile
 
 import utils
-
-# TODO actually log things and ensure log file is create/written to
-logging.basicConfig(
-    filename="nyiso_data.log",
-    filemode='a',
-    format='%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s',
-    datefmt='%H:%M:%S',
-    level=logging.DEBUG
-)
 
 
 class NYISOData:
@@ -36,8 +26,7 @@ class NYISOData:
             - create_csvs: whether to also save the databases as csvs (pickle dbs are used because they maintain frequency and timezone information)
             - storage_dir: The directory that the raw csvs and databases will be stored
         """
-        self.logger = logging.getLogger('NYISOData')
-        self.logger.info(f'Working on {dataset} for {year}')
+        print('Working on {dataset} for {year}')
 
         self.df = None  # dataframe containing dataset of choice
         self.dataset = dataset  # name of dataset
@@ -84,17 +73,15 @@ class NYISOData:
                 z = zipfile.ZipFile(io.BytesIO(r.content))
                 z.extractall(self.download_dir)
             else:
-                print(f'Warning: Request failed for {month} with status: {r.status_code}. Please see logs for more detail.')
-                self.logger.error(f"Request not OK: {r.text}")
+                print(f'Warning: Request failed for {month} with status: {r.status_code}')  #TODO: log this
 
     def construct_database(self):
         """Constructs database from raw datafiles and saves it in UTC"""
         # Determine expected timestamps for dataset
         self.curr_date = datetime.now(tz=pytz.timezone('US/Eastern'))  # update current time after download
 
-        timestamps = utils.build_db_ts_range(
-           cur_date=self.curr_date, frequency=self.dataset_details.f, request_year=self.year
-        )
+        start, end = utils.fetch_ts_start_end(self.curr_date, self.dataset_details.f, self.year)
+        timestamps = pd.date_range(start, end, freq=self.dataset_details.f, tz='US/Eastern')
 
         # Construct Database
         print('Constructing DB...')
