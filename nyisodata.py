@@ -26,7 +26,7 @@ class NYISOData:
             - create_csvs: whether to also save the databases as csvs (pickle dbs are used because they maintain frequency and timezone information)
             - storage_dir: The directory that the raw csvs and databases will be stored
         """
-        print('Working on {dataset} for {year}')
+        print(f'Working on {dataset} for {year}')
 
         self.df = None  # dataframe containing dataset of choice
         self.dataset = dataset  # name of dataset
@@ -80,7 +80,7 @@ class NYISOData:
         # Determine expected timestamps for dataset
         self.curr_date = datetime.now(tz=pytz.timezone('US/Eastern'))  # update current time after download
 
-        start, end = utils.fetch_ts_start_end(self.curr_date, self.dataset_details.f, self.year)
+        start, end = utils.fetch_ts_start_end(self.curr_date, self.year, self.dataset_details.f)
         timestamps = pd.date_range(start, end, freq=self.dataset_details.f, tz='US/Eastern')
 
         # Construct Database
