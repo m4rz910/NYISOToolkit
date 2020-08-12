@@ -8,8 +8,8 @@ import pathlib as pl
 import pytz
 import requests
 import zipfile
-
 import utils
+from data_quality import DataQuality
 
 
 class NYISOData:
@@ -26,7 +26,25 @@ class NYISOData:
             - create_csvs: whether to also save the databases as csvs (pickle dbs are used because they maintain frequency and timezone information)
             - storage_dir: The directory that the raw csvs and databases will be stored
         """
+<<<<<<< Updated upstream
         print(f'Working on {dataset} for {year}')
+=======
+        self.df = None #dataframe containing dataset of choice
+        self.dataset = dataset #name of dataset
+        self.year = str(year) #force to be string if not already
+        self.curr_date = datetime.now(tz=pytz.timezone('US/Eastern')) #datetime object for current time
+        self.create_csvs=create_csvs #if false will oncreate pickle dbs
+        
+        self.storage_dir = storage_dir #where databases and raw csvs will be stored
+        self.download_dir = None # directory that raw csv will be extracted to
+        self.output_dir = None # directory where files will be saved
+        
+        self.dataset_url_map = None #contains information
+        self.type = None # dataset type (load, fuel_mix, etc)
+        self.f = None    # dataset frequency
+        self.col = None # column name in csv that contains regions
+        self.val_col = None # column name in csv that contains values
+>>>>>>> Stashed changes
 
         self.df = None  # dataframe containing dataset of choice
         self.dataset = dataset  # name of dataset
@@ -54,13 +72,19 @@ class NYISOData:
         # Check whether to get new data and construct new DB
         file_ = pl.Path(self.output_dir, f'{self.year}_{self.dataset}.pkl')
         if not file_.exists() or reconstruct:
+            print(f'Working on {self.dataset} for {self.year}')
             self.get_raw_data()
+            DataQuality(dataset=self.dataset, year=self.year).fix_issues() #edit raw datafiles with known issues
             self.construct_database()
+            print('Done\n')
         else:
-            print(f'{file_.name} exists')
             self.df = pd.read_pickle(file_)
+<<<<<<< Updated upstream
         print('Done\n')
 
+=======
+            
+>>>>>>> Stashed changes
     def get_raw_data(self):
         """Downloads raw CSV's from NYISO Website"""
         month_range = utils.fetch_months_to_download(self.curr_date, self.year)
@@ -150,7 +174,17 @@ class NYISOData:
             if self.create_csvs:
                 df.to_csv(filepath)
             self.df = df
+<<<<<<< Updated upstream
 
+=======
+                        
+def check_and_interpolate_nans(df):
+    """If there are NANs in the data, interpolate"""
+    if df.isnull().values.any(): 
+        print('Note: {} Nans found... interpolating'.format(df.isna().sum().sum()))
+        df.interpolate(method='linear', inplace=True)
+    return df
+>>>>>>> Stashed changes
 
 def construct_databases(years, datasets, reconstruct=False, create_csvs=False):
     """Constructs all databases for selected years"""
@@ -161,6 +195,7 @@ def construct_databases(years, datasets, reconstruct=False, create_csvs=False):
 
 EXTERNAL_TFLOWS_MAP = {'SCH - HQ - NY': 'HQ CHATEAUGUAY',
                        'SCH - HQ_CEDARS': 'HQ CEDARS',
+<<<<<<< Updated upstream
                        'SCH - HQ_IMPORT_EXPORT': 'HQ NET',
                        'SCH - NE - NY': 'NPX NEW ENGLAND (NE)',
                        'SCH - NPX_1385': 'NPX 1385 NORTHPORT (NNC)',
@@ -174,6 +209,21 @@ EXTERNAL_TFLOWS_MAP = {'SCH - HQ - NY': 'HQ CHATEAUGUAY',
 SUPPORTED_DATASETS = ['load_h', 'load_5m', 'load_forecast_h',
                       'interface_flows_5m', 'fuel_mix_5m',
                       'lbmp_dam_h', 'lbmp_rt_5m']
+=======
+                       'SCH - HQ_IMPORT_EXPORT': 'SCH - HQ_IMPORT_EXPORT', #subset of HQ Chateauguay
+                       'SCH - NE - NY':  'NPX NEW ENGLAND (NE)',
+                       'SCH - NPX_1385': 'NPX 1385 NORTHPORT (NNC)',
+                       'SCH - NPX_CSC':  'NPX CROSS SOUND CABLE (CSC)',
+                       'SCH - OH - NY':  'IESO',
+                       'SCH - PJ - NY':  'PJM KEYSTONE',
+                       'SCH - PJM_HTP':  'PJM HUDSON TP',
+                       'SCH - PJM_NEPTUNE':'PJM NEPTUNE',
+                       'SCH - PJM_VFT': 'PJM LINDEN VFT'}
+
+SUPPORTED_DATASETS = ['load_h', 'load_5m','load_forecast_h',
+                      'interface_flows_5m','fuel_mix_5m',
+                      'lbmp_dam_h','lbmp_rt_5m']
+>>>>>>> Stashed changes
 
 if __name__ == '__main__':
     years = ['2019', '2013']
