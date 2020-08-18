@@ -9,7 +9,7 @@ import pytz
 class NYISOData:
     
     def __init__(self, dataset, year,
-                 reconstruct=False, create_csvs=False, storage_dir=pl.Path(__file__).resolve().parent):
+                 reconstruct=False, create_csvs=False, c_dir=pl.Path(__file__).resolve().parent):
         """
         Creates a local database based on dataset name and year stored in UTC.
         
@@ -18,16 +18,15 @@ class NYISOData:
             - year: Year of data needed (in Eastern Time)
             - reconstruct: If true, redownload NYISO data and reconstruct database
             - create_csvs: whether to also save the databases as csvs (pickle dbs are used because they maintain frequency and timezone information)
-            - storage_dir: The directory that the raw csvs and databases will be stored
+            - c_dir: The the current module directory
         """
-        print(f'Working on {dataset} for {year}')
         self.df = None #dataframe containing dataset of choice
         self.dataset = dataset #name of dataset
         self.year = str(year) #force to be string if not already
         self.curr_date = datetime.now(tz=pytz.timezone('US/Eastern')) #datetime object for current time
         self.create_csvs=create_csvs #if false will oncreate pickle dbs
         
-        self.storage_dir = storage_dir #where databases and raw csvs will be stored
+        self.c_dir = c_dir #where databases and raw csvs will be stored
         self.download_dir = None # directory that raw csv will be extracted to
         self.output_dir = None # directory where files will be saved
         
@@ -91,8 +90,8 @@ class NYISOData:
         self.val_col = self.dataset_url_map[self.dataset]['val_col']
         
         #Set up download and output folders
-        self.download_dir = pl.Path(self.storage_dir, 'raw_datafiles', self.dataset, self.year)
-        self.output_dir = pl.Path(self.storage_dir, 'databases')
+        self.download_dir = pl.Path(self.c_dir, 'raw_datafiles', self.dataset, self.year)
+        self.output_dir = pl.Path(self.c_dir, 'databases')
         for directory in [self.download_dir, self.output_dir]:
             pl.Path(directory).mkdir(parents=True, exist_ok=True)
         
@@ -104,9 +103,7 @@ class NYISOData:
             self.get_raw_data()
             self.construct_database()
         else:
-            print(f'{file_.name} exists')
             self.df = pd.read_pickle(file_)
-        print('Done\n')
             
     def get_raw_data(self):
         """Downloads raw CSV's from NYISO Website"""
