@@ -1,4 +1,4 @@
-# NYISOData
+# NYISOToolkit
 Tool for accessing power system data from the New York Independent System Operator. With one line of code you have data ready to analyze with Pandas.
 Source: http://mis.nyiso.com/public/
 
