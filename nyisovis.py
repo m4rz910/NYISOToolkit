@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 from nyisodata import NYISOData, EXTERNAL_TFLOWS_MAP
+from nyisostat import NYISOStat
 import pandas as pd
+import matplotlib as mat
 import matplotlib.dates as mdates
-import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt 
 import yaml
 import pathlib as pl
 
@@ -18,12 +20,58 @@ plt.rcParams['axes.edgecolor'] = '.15'
 # Legend Colors
 c_dir = pl.Path(__file__).resolve().parent
 leg_path = pl.Path(c_dir, 'legend_colors.yaml')
-with open(leg_path) as file: legend_deets = yaml.load(file, Loader=yaml.FullLoader)
+with open(leg_path) as file: LEGEND_DEETS = yaml.load(file, Loader=yaml.FullLoader)
 
 class NYISOVis:
 
+    
+    @staticmethod
+    def carbon_free_year(year='2019', out_dir = pl.Path(c_dir,'visualizations')):
+        stats = NYISOStat.annual_energy_summary(year=year)
+        df = stats['Historical [% of Load]'].drop(index=['Total Carbon Free Generation',
+                                                      'Total Generation',
+                                                      'Net Imports',
+                                                      'Total Generation + Net Imports',
+                                                      'Load'])
+        df = df.to_frame().T
+        #Plot
+        fig, ax = plt.subplots(figsize=(4,8))
+        df.plot.bar(stacked=True, ax=ax,
+                    color=[LEGEND_DEETS.get(x, '#333333') for x in df.columns],
+                    grid=True,alpha=0.9)
+        # Carbon Free Line
+        perc = stats['Historical [% of Load]'].loc['Total Carbon Free Generation']
+        plt.axhline(y=perc, color='k', linestyle='dashed',
+                    label='CO$_2$e-Free Generation')
+        plt.text(-0.0755, perc/100,'{:.0f}'.format(perc), transform=ax.transAxes)
+        # Carbon Free + Imports Line
+        perc = stats['Historical [% of Load]'].loc[['Total Carbon Free Generation',
+                                                    'Net Imports']].sum()
+        plt.axhline(y=perc, color='k', linestyle='dotted',
+                    label='CO$_2$e-Free Generation + Net Imports')
+        plt.text(-0.0755, perc/100,'{:.0f}'.format(perc), transform=ax.transAxes)
+        
+        #Legend
+        handles, labels = ax.get_legend_handles_labels()
+        ax.legend(reversed(handles), reversed(labels),
+                  loc='right', bbox_to_anchor=(2.2, 0.5),
+                  ncol=1, fancybox=True, shadow=False)
+        #Axes
+        plt.xlabel(year); plt.ylabel('Percent of NY Load [%]')
+        plt.xticks([]); plt.ylim(0,100)
+        plt.savefig(pl.Path(out_dir,f'{year}_nyiso_annual_carbon_free_energy.png'), dpi=300, bbox_inches='tight')
+        return df
+    
+    def carbon_free_years(years):
+        """Todo: stacked area chart over time using nyisostat annual summary"""
+        return
+    
     @staticmethod
     def clcpa_carbon_free(year='2019', sort=False, f='D', out_dir = pl.Path(c_dir,'visualizations')):
+        if f in ['Y']:
+            print('Frequency Not Supported!')
+            return None
+        
         #Power [MW]
         load = NYISOData(dataset='load_5m',year=year).df.tz_convert('US/Eastern')['NYCA']
         fuel_mix = NYISOData(dataset='fuel_mix_5m',year=year).df.tz_convert('US/Eastern')
@@ -51,7 +99,7 @@ class NYISOVis:
         else:
             df = ef[carbonfree_sources] #plot only carbon free resources
         df.plot.area(ax=ax,
-                     color=[legend_deets.get(x, '#333333') for x in df.columns],
+                     color=[LEGEND_DEETS.get(x, '#333333') for x in df.columns],
                      alpha=0.9, grid=True, lw=0)
         plt.ylabel('% of Load Served by NY CO$_2$e-Free Generation')
         
@@ -117,5 +165,5 @@ class NYISOVis:
             plt.savefig(file, dpi=300, bbox_inches='tight')
             
 if __name__ == '__main__':
-    NYISOVis.annual_summary(year='2019', f='D')
+    NYISOVis.carbon_free_year(year='2019')
     #NYISOVis.clcpa_carbon_free(year='2019', sort=False, f='D')

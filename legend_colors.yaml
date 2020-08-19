@@ -1,6 +1,7 @@
 'Coal': '#464c55' #nrel
 'Oil': 'black'
 'Petroleum': 'black'
+'Other Fossile Fuels': 'black' #nyiso
 
 'Gas': '#a67b55' #nrel
 'Natural Gas': '#a67b55'
