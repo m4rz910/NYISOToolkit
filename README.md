@@ -13,7 +13,7 @@ NYISOVis.carbon_free_year(year='2019', f='D')  # daily (D) or monthy (M) frequen
 ![CLCPA](/visualizations/2019_clcpa_carbon_free.png)
  
 ## NYISOData
-Dataset Source: http://mis.nyiso.com/public/
+Raw Data Source: http://mis.nyiso.com/public/
 
 Datasets Currently Supported:
 - load_h  (hourly load by NYISO region)
