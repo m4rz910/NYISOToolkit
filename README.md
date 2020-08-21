@@ -1,9 +1,9 @@
 # NYISOToolkit
 Tool for accessing power system data data, generating statistics, and creating visualizations from the New York Independent System Operator. 
 
-# NYISOVis
+## NYISOVis
 The in house visulizations are focused on communicating New York's status toward achieving the decarbonization goals outlined by the Climate Leadership and Community Protection Act (CLCPA).
-Here is an example...
+### Usage Example
 ```python
 from nyisovis import NYISOVis
 NYISOVis.carbon_free_year(year='2019', f='D')  #simply pass the year and the frequency you want (daily or monthy is recommended)
@@ -12,7 +12,7 @@ NYISOVis.carbon_free_year(year='2019', f='D')  #simply pass the year and the fre
 ```
 ![CLCPA](/visualizations/2019_clcpa_carbon_free.png)
  
-# NYISOData
+## NYISOData
 Dataset Source: http://mis.nyiso.com/public/
 
 Datasets Currently Supported:
@@ -29,7 +29,7 @@ All datasets:
 - Frequency: Hourly or 5-mins. The raw data sometimes has higher or lower frequency than intended, but this library uses mean values to resample at the intended frequency. When interpolations are necessary, they are made. Some datasets only come in one frequency.
 - Datetime Convention: Start. The value(s)/measurement(s) associated with each timestamp occurred in the time period before the start of the next timestamp.
 
-Usage Example
+### Usage Example
 ```python
 from nyisodata import NYISOData
 df = NYISOData(dataset='load_h', year='2019').df # year argument in local time, but returns dataset in UTC 
@@ -43,7 +43,7 @@ datasets = ['load_h','interface_flows_5m']
 NYISOData.construct_databases(years=years, datasets=datasets, reconstruct=True, create_csvs=False)
 ```
 
-# Dataset Information
+### Dataset Information
 
 Load (load_h)
 - "Integrated Real-Time Actual Load is posted after each hour and represents the timeweighted hourly load for each zone" (NYISO Market Participant Guide p.62)
