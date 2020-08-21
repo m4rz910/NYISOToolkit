@@ -6,7 +6,7 @@ The in house visulizations are focused on communicating New York's status toward
 ### Usage Example
 ```python
 from nyisovis import NYISOVis
-NYISOVis.carbon_free_year(year='2019', f='D')  #simply pass the year and the frequency you want (daily or monthy is recommended)
+NYISOVis.carbon_free_year(year='2019', f='D')  # daily (D) or monthy (M) frequency is recommended
 #figure saved in visualization folder
 
 ```
