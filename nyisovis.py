@@ -68,7 +68,7 @@ class NYISOVis:
         #Power [MW]
         load = NYISOData(dataset='load_5m',year=year).df.tz_convert('US/Eastern')['NYCA']
         fuel_mix = NYISOData(dataset='fuel_mix_5m',year=year).df.tz_convert('US/Eastern')
-        imports = NYISOData(dataset='interface_flows_5m', year='2019').df.tz_convert('US/Eastern')
+        imports = NYISOData(dataset='interface_flows_5m', year=year).df.tz_convert('US/Eastern')
         imports = imports[imports['Interface Name'].isin(EXTERNAL_TFLOWS_MAP.values())]['Flow (MW)']
     
         #Energy Converstion [MWh] and Resampling By Summing Energy
@@ -82,6 +82,7 @@ class NYISOVis:
         #Plot Generation
         df = fuel_mix[['Nuclear','Hydro','Wind','Other Renewables','Dual Fuel', 'Natural Gas','Other Fossil Fuels', 'Net Imports']] #define order 
         fig, ax = plt.subplots(figsize=(10,5))
+        plt.title(year)
         df.plot.area(ax=ax,
                      color=[LEGEND_DEETS.get(x, '#333333') for x in df.columns],
                      alpha=0.9, grid=True, lw=0)
@@ -122,7 +123,7 @@ class NYISOVis:
         #Power [MW]
         load = NYISOData(dataset='load_5m',year=year).df.tz_convert('US/Eastern')['NYCA']
         fuel_mix = NYISOData(dataset='fuel_mix_5m',year=year).df.tz_convert('US/Eastern')
-        imports = NYISOData(dataset='interface_flows_5m', year='2019').df.tz_convert('US/Eastern')
+        imports = NYISOData(dataset='interface_flows_5m', year=year).df.tz_convert('US/Eastern')
         imports = imports[imports['Interface Name'].isin(EXTERNAL_TFLOWS_MAP.values())]['Flow (MW)']
     
         #Energy Converstion [MWh] and Resampling By Summing Energy
@@ -140,6 +141,7 @@ class NYISOVis:
                     
         #Plot Generation
         fig, ax = plt.subplots(figsize=(10,5))
+        plt.title(year)
         if sort:
             df = ef.sort_values('percent_carbon_free', ascending=True)[carbonfree_sources]
             df.reset_index(inplace=True, drop=True)
