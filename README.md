@@ -1,6 +1,19 @@
 # NYISOToolkit
-Tool for accessing power system data from the New York Independent System Operator. With one line of code you have data ready to analyze with Pandas.
-Source: http://mis.nyiso.com/public/
+Tool for accessing power system data data, generating statistics, and creating visualizations from the New York Independent System Operator. 
+
+# NYISOVis
+The in house visulizations are focused on communicating New York's status in achieving the decarbonization goals outlined by the Climate Leadership and Community Protection Act.
+Here is an example...
+```python
+from nyisovis import NYISOVis
+NYISOVis.carbon_free_year(year='2019', f='D')  #simply pass the year and the frequency you want (daily or monthy is recommended)
+#figure saved in visualization folder
+
+```
+![CLCPA](/visualizations/2019_clcpa_carbon_free.png)
+ 
+# NYISOData
+Dataset Source: http://mis.nyiso.com/public/
 
 Datasets Currently Supported:
 - load_h  (hourly load by NYISO region)
@@ -11,12 +24,12 @@ Datasets Currently Supported:
 - lbmp_dam_h (hourly day-ahead zonal location based marginal price)
 - lbmp_rt_5m (5-min reak time zonal location based marginal price)
 
-All datasets...
+All datasets:
 - Timezone: Coordinated Universal Time [UTC]
 - Frequency: Hourly or 5-mins. The raw data sometimes has higher or lower frequency than intended, but this library uses mean values to resample at the intended frequency. When interpolations are necessary, they are made. Some datasets only come in one frequency.
 - Datetime Convention: Start. The value(s)/measurement(s) associated with each timestamp occurred in the time period before the start of the next timestamp.
 
-# Usage Example
+Usage Example
 ```python
 from nyisodata import NYISOData
 df = NYISOData(dataset='load_h', year='2019').df # year argument in local time, but returns dataset in UTC 
