@@ -2,7 +2,7 @@
 Tool for accessing power system data data, generating statistics, and creating visualizations from the New York Independent System Operator. 
 
 # NYISOVis
-The in house visulizations are focused on communicating New York's status in achieving the decarbonization goals outlined by the Climate Leadership and Community Protection Act.
+The in house visulizations are focused on communicating New York's status toward achieving the decarbonization goals outlined by the Climate Leadership and Community Protection Act (CLCPA).
 Here is an example...
 ```python
 from nyisovis import NYISOVis
