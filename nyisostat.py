@@ -7,7 +7,7 @@ import pandas as pd
 class NYISOStat:
     
     @staticmethod
-    def annual_energy_summary(year='2019'):
+    def table_annual_energy(year='2019'):
         """
         Units: TWh
         """
@@ -23,17 +23,18 @@ class NYISOStat:
         imports = (imports * 1/12 ).sum(axis='index').sum()/(10**6)
         
         fuel_mix = fuel_mix.to_frame()
-        fuel_mix = fuel_mix.rename(columns={0:'Historical'}).sort_values('Historical', ascending=False)
+        fuel_mix = fuel_mix.rename(columns={0:f'Historic ({year})'}).sort_values(f'Historic ({year})', ascending=False)
         
         #reorder carbon free resources first
-        carbon_free_resources = ['Hydro','Wind','Other Renewables','Nuclear']
+        carbon_free_resources = ['Nuclear','Hydro','Wind','Other Renewables']
         df = fuel_mix.loc[carbon_free_resources]
-        df.loc['Total Carbon Free Generation'] = fuel_mix.loc[carbon_free_resources].sum()
         df = pd.concat([df, fuel_mix.loc[[ind for ind in fuel_mix.index if ind not in carbon_free_resources]]])
         
         df.loc['Total Generation'] = fuel_mix.sum()
+        df.loc['Total Renewable Generation'] = fuel_mix.loc[['Hydro','Wind','Other Renewables']].sum()
+        df.loc['Total Carbon-Free Generation'] = fuel_mix.loc[['Nuclear','Hydro','Wind','Other Renewables']].sum()
         df.loc['Net Imports'] = imports
         df.loc['Total Generation + Net Imports'] = df.loc['Net Imports'] + df.loc['Total Generation']
         df.loc['Load'] = load
-        df['Historical [% of Load]'] = df/load*100
+        df[f'Historic ({year}) [% of Load]'] = df/load*100
         return df
