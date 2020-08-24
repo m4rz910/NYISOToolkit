@@ -46,7 +46,8 @@ class NYISOVis:
         fuel_mix['Net Imports'] = imports
             
         #Plot Generation
-        df = fuel_mix[['Nuclear','Hydro','Wind','Other Renewables','Dual Fuel', 'Natural Gas','Other Fossil Fuels', 'Net Imports']] #define order 
+        order = ['Nuclear','Hydro','Other Renewables','Wind','Natural Gas','Dual Fuel','Other Fossil Fuels', 'Net Imports']
+        df = fuel_mix[order] 
         fig, ax = plt.subplots(figsize=(10,5), dpi=300)
         plt.title(f'Historic ({year})')
         df.plot.area(ax=ax,
@@ -103,7 +104,7 @@ class NYISOVis:
     
         #Calculating Energy Fraction [%]
         ef = fuel_mix.div(load, axis='index') * 100
-        carbonfree_sources = ['Nuclear','Hydro','Wind','Other Renewables',]
+        carbonfree_sources = ['Nuclear','Hydro','Other Renewables','Wind']
         ef['percent_carbon_free'] = ef[carbonfree_sources].sum(axis='columns')
                     
         #Plot Generation
@@ -195,18 +196,17 @@ class NYISOVis:
                     color=[LEGEND_DEETS.get(x, '#333333') for x in df.columns],
                     alpha=0.9)
         #Averages and Goals
-
-        # # Carbon Free Line
-        # perc = stats[f'Historic ({year}) [% of Load]'].loc['Total Carbon-Free Generation']
-        # plt.axhline(y=perc, color='k', linestyle='dashed',
-        #             label='CO$_2$e-Free Generation')
-        # plt.text(-0.0755, perc/100,'{:.0f}'.format(perc), transform=ax.transAxes)
-        # # Carbon Free + Imports Line
-        # perc = stats[f'Historic ({year}) [% of Load]'].loc[['Total Carbon-Free Generation',
-        #                                             'Net Imports']].sum()
-        # plt.axhline(y=perc, color='k', linestyle='dotted',
-        #             label='CO$_2$e-Free Generation + Net Imports')
-        # plt.text(-0.0755, perc/100,'{:.0f}'.format(perc), transform=ax.transAxes)
+        # Carbon Free Line
+        perc = stats[f'Historic ({year}) [% of Load]'].loc['Total Carbon-Free Generation']
+        plt.axhline(y=perc, color='k', linestyle='dashed',
+                    label='CO$_2$e-Free Generation')
+        plt.text(-0.0755, perc/100,'{:.0f}'.format(perc), transform=ax.transAxes)
+        # Carbon Free + Imports Line
+        perc = stats[f'Historic ({year}) [% of Load]'].loc[['Total Carbon-Free Generation',
+                                                    'Net Imports']].sum()
+        plt.axhline(y=perc, color='k', linestyle='dotted',
+                    label='CO$_2$e-Free Generation + Net Imports')
+        plt.text(-0.0755, perc/100,'{:.0f}'.format(perc), transform=ax.transAxes)
         
         #Legend
         handles, labels = ax.get_legend_handles_labels()
@@ -221,6 +221,10 @@ class NYISOVis:
             
     def fig_carbon_free_years(years):
         """Todo: stacked area chart over time using nyisostat annual summary"""
+        return
+    
+    def net_load():
+        """Todo: Load vs Net Load Shape"""
         return
             
 if __name__ == '__main__':

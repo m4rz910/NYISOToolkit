@@ -26,13 +26,13 @@ class NYISOStat:
         fuel_mix = fuel_mix.rename(columns={0:f'Historic ({year})'}).sort_values(f'Historic ({year})', ascending=False)
         
         #reorder carbon free resources first
-        carbon_free_resources = ['Nuclear','Hydro','Wind','Other Renewables']
+        carbon_free_resources = ['Nuclear','Hydro','Other Renewables','Wind']
         df = fuel_mix.loc[carbon_free_resources]
         df = pd.concat([df, fuel_mix.loc[[ind for ind in fuel_mix.index if ind not in carbon_free_resources]]])
         
         df.loc['Total Generation'] = fuel_mix.sum()
-        df.loc['Total Renewable Generation'] = fuel_mix.loc[['Hydro','Wind','Other Renewables']].sum()
-        df.loc['Total Carbon-Free Generation'] = fuel_mix.loc[['Nuclear','Hydro','Wind','Other Renewables']].sum()
+        df.loc['Total Renewable Generation'] = fuel_mix.loc[['Hydro','Other Renewables','Wind']].sum()
+        df.loc['Total Carbon-Free Generation'] = fuel_mix.loc[['Nuclear','Hydro','Other Renewables','Wind']].sum()
         df.loc['Net Imports'] = imports
         df.loc['Total Generation + Net Imports'] = df.loc['Net Imports'] + df.loc['Total Generation']
         df.loc['Load'] = load
