@@ -83,7 +83,7 @@ class NYISOVis:
     def fig_clcpa_carbon_free(year='2019', f='D',
                               out_dir = pl.Path(c_dir,'visualizations')):
         """
-        Inspiration: NYISO Power Trends 2020 - Figure 12: Production of In-State Renewables & Zero-Emission Resources Relative to 2019 Load 
+        Figure Inspiration: NYISO Power Trends 2020 - Figure 12: Production of In-State Renewables & Zero-Emission Resources Relative to 2019 Load 
         """
         if f in ['Y']:
             print('Frequency Not Supported!')
@@ -143,16 +143,17 @@ class NYISOVis:
         plt.ylim(0,100)
         plt.xlim(ef.index[0], ef.index[-1])
         plt.xlabel('')
-        plt.ylabel('Percent of Load Served by Carbon-Free Energy [%]')
-        if f!='M':
-            locator = mdates.MonthLocator()
-            ax.xaxis.set_major_locator(locator)
-            ax.xaxis.set_major_formatter(mdates.DateFormatter('%b'))
-            plt.xticks(rotation=0)
-            for tick in ax.xaxis.get_major_ticks() + ax.yaxis.get_major_ticks():
-                tick.tick1line.set_markersize(3)
-                tick.tick2line.set_markersize(3)
-            for tick in ax.xaxis.get_major_ticks(): tick.label1.set_horizontalalignment('center')
+        plt.ylabel('Percent of Load Served by Carbon-Free Energy')
+        
+        locator = mdates.MonthLocator()
+        ax.xaxis.set_major_locator(locator)
+        ax.xaxis.set_major_formatter(mdates.DateFormatter('%b'))
+        plt.xticks(rotation=0)
+        for tick in ax.xaxis.get_major_ticks() + ax.yaxis.get_major_ticks():
+            tick.tick1line.set_markersize(3)
+            tick.tick2line.set_markersize(3)
+        for tick in ax.xaxis.get_major_ticks():
+            tick.label1.set_horizontalalignment('center')
         #Save
         file = pl.Path(out_dir, f'{year}_clcpa_carbon_free.png')
         plt.savefig(file, bbox_inches='tight')
