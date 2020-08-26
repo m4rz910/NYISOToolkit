@@ -143,7 +143,7 @@ class NYISOVis:
         plt.ylim(0,100)
         plt.xlim(ef.index[0], ef.index[-1])
         plt.xlabel('')
-        plt.ylabel('% of Load Served by NY Carbon-Free Generation')
+        plt.ylabel('Percent of Load Served by Carbon-Free Energy [%]')
         if f!='M':
             locator = mdates.MonthLocator()
             ax.xaxis.set_major_locator(locator)
