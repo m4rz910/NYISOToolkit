@@ -108,7 +108,7 @@ class NYISOData:
     def get_raw_data(self):
         """Downloads raw CSV's from NYISO Website"""
         #Determine correct months to download
-        print('Downloading Data from NYISO...')
+        print('Downloading {self.dataset} from NYISO...')
         if self.curr_date.year == int(self.year):
             end = '{}-{}-01'.format(self.curr_date.year, self.curr_date.month)
         elif self.curr_date.year > int(self.year):
