@@ -12,12 +12,10 @@ There are three kinds of visualizations currently supported, check them all out 
 ### Usage Example
 ```python
 from nyisovis import NYISOVis
-NYISOVis.fig_energy(year='2019', f='D')
-NYISOVis.fig_clcpa_carbon_free(year='2019', sort=False, f='D')  # daily (D) or monthy (M) frequency is recommended
+NYISOVis.fig_clcpa_carbon_free(year='2019', f='D')  # daily (D) or monthy (M) frequency is recommended
 #figures saved in visualization folder by default
 
 ```
-![CLCPA](/visualizations/2019_energy.png)
 ![CLCPA](/visualizations/2019_clcpa_carbon_free.png)
  
 ## NYISOData

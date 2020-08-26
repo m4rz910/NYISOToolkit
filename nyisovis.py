@@ -64,7 +64,7 @@ class NYISOVis:
         #Axis
         plt.xlabel(''); plt.ylabel('Energy [GWh]')
         plt.xlim(df.index[0], df.index[-1])
-        plt.ylim(0,900)
+        #plt.ylim(0,900)
         if f!='M':
             locator = mdates.MonthLocator()
             ax.xaxis.set_major_locator(locator)
