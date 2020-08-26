@@ -64,7 +64,7 @@ class NYISOVis:
         #Axis
         plt.xlabel(''); plt.ylabel('Energy [GWh]')
         plt.xlim(df.index[0], df.index[-1])
-        #plt.ylim(0,900)
+        plt.ylim(0,900)
         if f!='M':
             locator = mdates.MonthLocator()
             ax.xaxis.set_major_locator(locator)
@@ -130,9 +130,8 @@ class NYISOVis:
         for t,l,c,h in zip(data, averages,colors,h_distances):
             avg = fuel_mix[t].sum(axis='index').sum() / load.sum(axis='index') * 100
             avg_imp = fuel_mix[t+['Net Imports']].sum(axis='index').sum() / load.sum(axis='index') * 100
-            plt.axhline(y=avg, xmax=h, color='k', linestyle='solid', lw=1.5)
-            vert_disp = 0.05
-            plt.text(h, avg/100-vert_disp, l.format(avg, avg_imp), 
+            plt.axhline(y=avg, xmax=h, color='k', linestyle='solid', lw=1)
+            plt.text(h, avg/100, l.format(avg, avg_imp), 
                      bbox=dict(boxstyle='round',ec='black',fc=c, alpha=0.9),
                      transform=ax.transAxes)
         #Legend
@@ -162,10 +161,10 @@ class NYISOVis:
     def fig_carbon_free_year(year='2019', out_dir = pl.Path(c_dir,'visualizations')):
         stats = NYISOStat.table_annual_energy(year=year)
         df = stats[f'Historic ({year}) [% of Load]'].drop(index=['Total Carbon-Free Generation',
-                                                         'Total Generation',
-                                                         'Net Imports',
-                                                         'Total Generation + Net Imports',
-                                                         'Load'])
+                                                                 'Total Generation',
+                                                                 'Net Imports',
+                                                                 'Total Generation + Net Imports',
+                                                                 'Load'])
         df = df.to_frame().T
         #Plot
         fig, ax = plt.subplots(figsize=(4,8), dpi=300)
