@@ -5,7 +5,30 @@ import pandas as pd
 
 
 class NYISOStat:
+    #general
+    @staticmethod
+    def table_hourly_dataset(dataset,year):
+        df = NYISOData(dataset=dataset,year=year).df.tz_convert('US/Eastern') #MW
+        df = (df * 1/12).resample('H').sum()/1000  #MW->MWh->GWh
+        return df
     
+    @staticmethod
+    def table_average_day_dataset(dataset, year):
+        if dataset == 'load_5m':
+            df = NYISOStat.table_average_day_load(year)
+        else:
+            df = NYISOStat.table_hourly_dataset(dataset=dataset,year=year)
+        df = df.groupby(df.index.hour).mean()
+        return df
+        
+    @staticmethod
+    def table_average_day_load(year):
+        df = NYISOStat.table_hourly_dataset(dataset='load_5m',year=year)['NYCA']
+        df = pd.DataFrame(df).rename(columns={'NYCA':'Load'})
+        df2 = NYISOStat.table_hourly_dataset(dataset='fuel_mix_5m',year=year)[['Wind','Other Renewables']].sum(axis='columns')
+        df['Net Load'] = df.subtract(df2,axis='index')
+        return df
+        
     @staticmethod
     def table_annual_energy(year='2019'):
         """
@@ -38,3 +61,26 @@ class NYISOStat:
         df.loc['Load'] = load
         df[f'Historic ({year}) [% of Load]'] = df/load*100
         return df
+    
+    #Interface Flows
+    @staticmethod
+    def table_instate_flow(year):
+        """Flow between Upstate and Downstate"""
+        df = NYISOData('interface_flows_5m',year).df.tz_convert('US/Eastern')
+        df = df[df['Interface Name']=='TOTAL EAST']['Flow (MW)']
+        df = (df * 1/12).resample('H').sum()/1000  #MW->MWh->GWh
+        return df
+    
+    @staticmethod
+    def table_average_day_instate_flow(year):
+        df = NYISOStat.table_instate_flow(year) #GWh
+        df = df.groupby(df.index.hour).mean() 
+        return df
+    
+    @staticmethod
+    def table_max_day_instate_flow(year):
+        df = NYISOStat.table_instate_flow(year) #GWh
+        date = df.idxmax()
+        df = df.loc[date.strftime("%Y-%m-%d")]
+        df.index = df.index.hour
+        return df 
