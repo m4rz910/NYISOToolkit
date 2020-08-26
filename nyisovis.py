@@ -140,7 +140,7 @@ class NYISOVis:
         ax.legend(loc='lower center',bbox_to_anchor=(0.45, -0.15),
                   ncol=5, fancybox=True, shadow=False)
         #Axes
-        plt.ylim(0,101)
+        plt.ylim(0,100)
         plt.xlim(ef.index[0], ef.index[-1])
         plt.xlabel('')
         plt.ylabel('% of Load Served by NY Carbon-Free Generation')
@@ -204,6 +204,6 @@ class NYISOVis:
         return
             
 if __name__ == '__main__':
-    #NYISOVis.fig_energy(year='2019', f='D')
-    #NYISOVis.fig_carbon_free_year(year='2019')
-    NYISOVis.fig_clcpa_carbon_free(year='2017', f='D')
+    NYISOVis.fig_energy(year='2019', f='D')
+    NYISOVis.fig_carbon_free_year(year='2019')
+    NYISOVis.fig_clcpa_carbon_free(year='2019', f='D')
