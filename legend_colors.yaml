@@ -1,6 +1,7 @@
 
 #Legend
 legend_colors: 
+    'Fossil-Fuel': 'black'
     'Coal': 'black' #nrel
     'Oil': 'black'
     'Petroleum': 'black'
@@ -11,6 +12,7 @@ legend_colors:
     'Dual Fuel': '#744b27' #nrel dark brown
     'Other Gas': 'orange'
     
+    'Carbon-free (Non-renewable)': '#a74038'
     'Nuclear': '#a74038' #nrel
     
     'Geo/Bio': '#74e427' #nrel
@@ -20,6 +22,7 @@ legend_colors:
     'Imports': '#878787' #nrel
     'Net Imports': '#878787'
     
+    'Carbon-free (Renewable)': 'limegreen'
     'Solar': '#ebc054' #nrel
     'Other Renewables': '#ebc054'
     'Other renewables': '#ebc054'
