@@ -2,7 +2,7 @@ from datetime import timedelta
 from collections import namedtuple
 
 import pandas as pd
-from plumbum import local
+import pathlib as pl
 
 BASE_URL = 'http://mis.nyiso.com/public/csv/'
 YAML_FILE = 'dataset_url_map.yml'
@@ -23,8 +23,7 @@ def fetch_months_to_download(cur_date, year_to_collect):
     if year_to_collect > cur_date.year:
         raise ValueError('Error: Year to collect is greater than current year')
 
-    range_end = f'{cur_date.year}-{cur_date.month}-01' if cur_date.year == year_to_collect \
-        else f'{year_to_collect + 1}-01-01'
+    range_end = f'{cur_date.year}-{cur_date.month}-01' if cur_date.year == year_to_collect else f'{year_to_collect + 1}-01-01'
 
     return pd.date_range(
         start=f'{year_to_collect - 1}-12-01',  # start at last month of previous year
@@ -41,7 +40,7 @@ def check_and_interpolate_nans(df):
     """
     nan_count = df.isna().sum().sum()
     if nan_count > 0:
-        print(f'Note: {nan_count} Nans found... interpolating')
+        #print(f'Note: {nan_count} NaNs found... interpolating')
         df.interpolate(method='linear', inplace=True)
     return df
 
@@ -52,7 +51,7 @@ def fetch_dataset_url_map(dataset):
 
     :dataset: name of dataset -> str;
     """
-    path = local.path(__file__).dirname / YAML_FILE
+    path = pl.Path(pl.Path(__file__).resolve().parent, YAML_FILE)
     yml = open_yml(path)[dataset]
 
     return dataset_details(

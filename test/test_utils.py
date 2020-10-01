@@ -1,10 +1,12 @@
 import datetime
 import pytest
-
 import pandas as pd
+import pathlib as pl
+import sys
 
+nyisotoolkit_dir=pl.Path(__file__).resolve().parent.parent
+sys.path.append(str(nyisotoolkit_dir))
 import utils
-
 
 def test_fetch_months_to_download_general():
     cur_date = datetime.datetime(2020, 8, 2)

@@ -15,13 +15,7 @@ e_tflows_reg_map = {'HQ CHATEAUGUAY': 'Upstate',
                     'PJM LINDEN VFT':'Downstate'}
 
 if __name__ == '__main__':
-    #df = NYISOData(dataset='interface_flows_5m', year='2013', reconstruct=True).df
-<<<<<<< Updated upstream:test/tests.py
-    df = NYISOData(dataset='lbmp_dam_h', year='2019', reconstruct=True).df
-    df = NYISOData(dataset='lbmp_rt_5m', year='2019', reconstruct=True).df
-=======
-    #df = NYISOData(dataset='lbmp_dam_h', year='2019', reconstruct=True).df
-    
+
     loadh  = NYISOData(dataset='load_h', year='2019').df.sum(axis='index')['NYCA']
     load  = (NYISOData(dataset='load_5m', year='2019').df*(1/12)).sum(axis='index')['NYCA']
     fuel  = (NYISOData(dataset='fuel_mix_5m', year='2019').df*(1/12)).sum(axis='index').sum()
@@ -36,4 +30,3 @@ if __name__ == '__main__':
                     'fuel':fuel,
                     'flows':flows,
                     'load-flows':load-flows})
->>>>>>> Stashed changes:tests.py
