@@ -79,7 +79,7 @@ Interface Flows (interface_flows_5m)
     External Interfaces
     - HQ CHATEAUGUAY
     - HQ CEDARS
-    - HQ NET
+    - HQ Import Export (subset of HQ CHATEAUGUAY)
     - NPX NEW ENGLAND (NE)
     - NPX 1385 NORTHPORT (NNC)
     - NPX CROSS SOUND CABLE (CSC)
@@ -102,7 +102,7 @@ Interface Flows (interface_flows_5m)
 #The following map is used to map datafile external interface names and those on the website
 external_tflows_map = {'SCH - HQ - NY': 'HQ CHATEAUGUAY',
                        'SCH - HQ_CEDARS': 'HQ CEDARS',
-                       'SCH - HQ_IMPORT_EXPORT': 'HQ NET',
+                       'SCH - HQ_IMPORT_EXPORT': 'SCH - HQ_IMPORT_EXPORT', #subset of HQ Chateauguay…it includes only scheduled import/export flows over Chateauguay, and excludes wheel-through interchange
                        'SCH - NE - NY':  'NPX NEW ENGLAND (NE)',
                        'SCH - NPX_1385': 'NPX 1385 NORTHPORT (NNC)',
                        'SCH - NPX_CSC':  'NPX CROSS SOUND CABLE (CSC)',
