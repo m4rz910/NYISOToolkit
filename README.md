@@ -16,7 +16,7 @@ NYISOVis.fig_clcpa_carbon_free(year='2019', f='D')  # daily (D) or monthy (M) fr
 #figures saved in visualization folder by default
 
 ```
-![CLCPA](/visualizations/2019_clcpa_carbon_free.png)
+![CLCPA](/visualizations/2019_clcpa_carbon_free_D.png)
  
 ## NYISOData
 Raw Data Source: http://mis.nyiso.com/public/

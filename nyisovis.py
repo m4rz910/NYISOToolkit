@@ -83,7 +83,7 @@ class NYISOVis:
         plt.setp(ax.xaxis.get_ticklines() + ax.yaxis.get_ticklines(), markersize=3)
         
         #Save
-        file = pl.Path(out_dir, f'{year}_energy.png')
+        file = pl.Path(out_dir, f'{year}_energy_{f}.png')
         plt.savefig(file, bbox_inches='tight', transparent=True)
         
                 
@@ -159,7 +159,7 @@ class NYISOVis:
         plt.setp(ax.xaxis.get_ticklines() + ax.yaxis.get_ticklines(), markersize=3)
         
         #Save
-        file = pl.Path(out_dir, f'{year}_clcpa_carbon_free.png')
+        file = pl.Path(out_dir, f'{year}_clcpa_carbon_free_{f}.png')
         plt.savefig(file, bbox_inches='tight', transparent=True)
             
     @staticmethod
