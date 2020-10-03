@@ -21,6 +21,11 @@ class DataQuality:
         #check which datasets are present and then fix them
         DataQuality().issue_fuelmix_2017()
     
+    def post_db_construction_fixes(self):
+        if self.dataset == 'interface_flows_5m':
+            #remove losses from external interface flows
+            return None
+            
     @staticmethod
     def issue_fuelmix_2017():
         fuel_mix_dir = pl.Path(lib_dir,'raw_datafiles','fuel_mix_5m').glob('*/')

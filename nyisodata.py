@@ -14,7 +14,8 @@ from data_quality import DataQuality
 class NYISOData:
 
     def __init__(self, dataset, year,
-                 reconstruct=False, create_csvs=False, c_dir=pl.Path(__file__).resolve().parent):
+                 redownload=False, reconstruct=False, create_csvs=False,
+                 c_dir=pl.Path(__file__).resolve().parent):
         """
         Creates a local database based on dataset name and year stored in UTC.
         
@@ -37,7 +38,7 @@ class NYISOData:
         self.dataset_details = None  # namedtuple containing details
         
         self.config()  # sets some of the class attributes
-        self.main(reconstruct)
+        self.main(redownload, reconstruct)
 
     def config(self):
         """Sets important instance attributes and creates directories for storing files"""
@@ -46,14 +47,16 @@ class NYISOData:
         for dir_ in [self.download_dir, self.output_dir]:
             dir_.mkdir(parents=True, exist_ok=True)
 
-    def main(self, reconstruct):
+    def main(self, redownload, reconstruct):
         """Decides whether to download new data and (re)make database or just read existing one."""
         # Check whether to get new data and construct new DB
         file_ = pl.Path(self.output_dir, f'{self.year}_{self.dataset}.pkl')
-        if not file_.exists() or reconstruct:
-            self.get_raw_data()
+        if not file_.exists() or redownload or reconstruct:
+            if redownload:
+                self.get_raw_data()
             #DataQuality(dataset=self.dataset, year=self.year).fix_issues() #edit raw datafiles with known issues
             self.construct_database()
+            #self.DataQuality(dataset=self.dataset, year=self.year).post_db_construction_fixes()
         else:
             self.df = pd.read_pickle(file_)
 
@@ -125,9 +128,15 @@ class NYISOData:
                 # remap external interface names to match website
                 df['Interface Name'] = df['Interface Name'].map(EXTERNAL_TFLOWS_MAP).fillna(df['Interface Name'])
                 df = df.rename(columns={'Flow (MWH)': 'Flow (MW)',
-                                        'Postitive Limit (MWH)': 'Postitive Limit (MW)',
+                                        'Positive Limit (MWH)': 'Positive Limit (MW)',
                                         'Negative Limit (MWH)': 'Negative Limit (MW)'})
-
+                #pivot into better form
+                df = df.pivot(columns='Interface Name')
+                df = df.swaplevel(axis='columns')
+                #add external/internal flows level
+                f = lambda x: 'External Flows' if x in EXTERNAL_TFLOWS_MAP.values() else 'Internal Flows'
+                df.columns = pd.MultiIndex.from_tuples([(f(c[0]),) + c for c in df.columns])
+                
             # Convert back to US/Eastern to select time period based on local time
             df = df.tz_convert('US/Eastern')
             df = df.loc[start:end]
