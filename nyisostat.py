@@ -38,7 +38,7 @@ class NYISOStat:
         load = NYISOData(dataset='load_5m',year=year).df.tz_convert('US/Eastern')['NYCA']
         fuel_mix = NYISOData(dataset='fuel_mix_5m',year=year).df.tz_convert('US/Eastern')
         imports = NYISOData(dataset='interface_flows_5m', year='2019').df.tz_convert('US/Eastern')
-        imports = imports[imports['Interface Name'].isin(EXTERNAL_TFLOWS_MAP.values())]['Flow (MW)']
+        imports = imports.loc[:,('External Flows',slice(None),'Flow (MW)')]
     
         #Energy Converstion [MWh] and Resampling By Summing Energy
         load = (load * 1/12).sum(axis='index').sum()/(10**6) #MW->MWh->TWh

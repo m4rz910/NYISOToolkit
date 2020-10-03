@@ -33,7 +33,7 @@ class NYISOVis:
         load = NYISOData(dataset='load_5m',year=year).df.tz_convert('US/Eastern')['NYCA']
         fuel_mix = NYISOData(dataset='fuel_mix_5m',year=year).df.tz_convert('US/Eastern')
         imports = NYISOData(dataset='interface_flows_5m', year=year).df.tz_convert('US/Eastern')
-        imports = imports[imports['Interface Name'].isin(EXTERNAL_TFLOWS_MAP.values())]['Flow (MW)']
+        imports = imports.loc[:,('External Flows',slice(None),'Flow (MW)')].sum(axis='columns')
         
         dfs = {'load':load, 'fuel_mix':fuel_mix, 'imports': imports} # group datasets into dictionary to apply 
     
@@ -93,7 +93,7 @@ class NYISOVis:
         load = NYISOData(dataset='load_5m',year=year).df.tz_convert('US/Eastern')['NYCA']
         fuel_mix = NYISOData(dataset='fuel_mix_5m',year=year).df.tz_convert('US/Eastern')
         imports = NYISOData(dataset='interface_flows_5m', year=year).df.tz_convert('US/Eastern')
-        imports = imports[imports['Interface Name'].isin(EXTERNAL_TFLOWS_MAP.values())]['Flow (MW)']
+        imports = imports.loc[:,('External Flows',slice(None),'Flow (MW)')].sum(axis='columns')
     
         #Energy Converstion [MWh] and Resampling By Summing Energy
         load = (load * 1/12).resample(f).sum()  
