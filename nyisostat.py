@@ -56,8 +56,8 @@ class NYISOStat:
         df.loc['Total Generation'] = fuel_mix.sum()
         df.loc['Total Renewable Generation'] = fuel_mix.loc[['Hydro','Other Renewables','Wind']].sum()
         df.loc['Total Carbon-Free Generation'] = fuel_mix.loc[['Nuclear','Hydro','Other Renewables','Wind']].sum()
-        df.loc['Net Imports'] = imports
-        df.loc['Total Generation + Net Imports'] = df.loc['Net Imports'] + df.loc['Total Generation']
+        df.loc['Imports'] = imports
+        df.loc['Total Generation + Imports'] = df.loc['Imports'] + df.loc['Total Generation']
         df.loc['Load'] = load
         df[f'Historic ({year}) [% of Load]'] = df/load*100
         return df

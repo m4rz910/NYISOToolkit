@@ -3,15 +3,8 @@ from nyisodata import NYISOData, EXTERNAL_TFLOWS_MAP
 from nyisostat import NYISOStat
 import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
-import plotly.express as px
-import plotly.offline as opy
-from plotly.subplots import make_subplots
-import plotly.graph_objs as go
 import yaml
 import pathlib as pl
-import os
-import numpy as np
-import pandas as pd
 
 # Figure Configuration
 plt.style.use(['seaborn-whitegrid'])
@@ -49,11 +42,11 @@ class NYISOVis:
             return (df * 1/12).resample(f).sum()/1000  #MW->MWh->GWh
         dfs = {k: power_to_energy(v) for k, v in dfs.items()}
         
-        dfs['fuel_mix']['Net Imports'] = dfs['imports'] #add imports to fuel mix
+        dfs['fuel_mix']['Imports'] = dfs['imports'] #add imports to fuel mix
         del dfs['imports'] #remove imports from the dfs list
         
         order = ['Nuclear','Hydro','Other Renewables','Wind','Natural Gas','Dual Fuel',
-                 'Other Fossil Fuels', 'Net Imports'] 
+                 'Other Fossil Fuels', 'Imports'] 
         dfs['fuel_mix'] = dfs['fuel_mix'][order] #fix order
         
         def month_adj_object(df):
@@ -106,7 +99,7 @@ class NYISOVis:
         load = (load * 1/12).resample(f).sum()  
         fuel_mix = (fuel_mix * 1/12).resample(f).sum()   
         imports = (imports * 1/12 ).resample(f).sum()
-        fuel_mix['Net Imports'] = imports #Add Imports to fuel mix
+        fuel_mix['Imports'] = imports #Add Imports to fuel mix
     
         #Calculating Carbon-free Fraction [%]
         ef = fuel_mix.div(load, axis='index') * 100
@@ -125,21 +118,21 @@ class NYISOVis:
                      alpha=0.9, lw=0)
        
         #Plot Import Line
-        gen_imp = ef[carbonfree_sources+['Net Imports']].sum(axis='columns')
+        gen_imp = ef[carbonfree_sources+['Imports']].sum(axis='columns')
         gen_imp.index = gen_imp.index.astype('O')
         gen_imp.plot.line(ax=ax,linestyle='dotted',
-                          linewidth=1, color='k', label='Total + Net Imports')
+                          linewidth=1, color='k', label='Total + Imports')
     
         #Plot Goals and Progress
         data = [[t for t in carbonfree_sources if t!='Nuclear'],
                 carbonfree_sources]
-        averages = ['Renewable: {:.0f}% + Net Imports: {:.0f}% (70% by 2030)',
-                    'Carbon-Free: {:.0f}% + Net Imports: {:.0f}% (100% by 2040)']
+        averages = ['Renewable: {:.0f}% + Imports: {:.0f}% (70% by 2030)',
+                    'Carbon-Free: {:.0f}% + Imports: {:.0f}% (100% by 2040)']
         colors = ['limegreen','lawngreen']
         h_distances = [0.05, 0.05]
         for t,l,c,h in zip(data, averages,colors,h_distances):
             avg = fuel_mix[t].sum(axis='index').sum() / load.sum(axis='index') * 100
-            avg_imp = fuel_mix[t+['Net Imports']].sum(axis='index').sum() / load.sum(axis='index') * 100
+            avg_imp = fuel_mix[t+['Imports']].sum(axis='index').sum() / load.sum(axis='index') * 100
             ax.axhline(y=avg, xmax=h, color='k', linestyle='solid', lw=1)
             ax.text(h, avg/100, l.format(avg, avg_imp), 
                      bbox=dict(boxstyle='round',ec='black',fc=c, alpha=0.9),
@@ -168,7 +161,7 @@ class NYISOVis:
         df = stats[f'Historic ({year}) [% of Load]'].drop(index=['Total Renewable Generation',
                                                                  'Total Carbon-Free Generation',
                                                                  'Total Generation',
-                                                                 'Total Generation + Net Imports',
+                                                                 'Total Generation + Imports',
                                                                  'Load'])
         df = df.to_frame().T
         #Plot
@@ -184,9 +177,9 @@ class NYISOVis:
         ax.text(-0.0755, perc/100,'{:.0f}'.format(perc), transform=ax.transAxes)
         # Carbon Free + Imports Line
         perc = stats[f'Historic ({year}) [% of Load]'].loc[['Total Carbon-Free Generation',
-                                                            'Net Imports']].sum()
+                                                            'Imports']].sum()
         ax.axhline(y=perc, color='k', linestyle='dotted',
-                    label='CO$_2$e-Free Generation + Net Imports')
+                    label='CO$_2$e-Free Generation + Imports')
         ax.text(-0.0755, perc/100,'{:.0f}'.format(perc), transform=ax.transAxes)
         
         #Legend
@@ -196,7 +189,7 @@ class NYISOVis:
                   ncol=1, fancybox=True, shadow=False)
         #Axes
         ax.set(title=f'Historic ({year})',
-               xlabel=year, ylabel='Percent of Load [%]',
+               xlabel=year, ylabel='Percent of Load Served by Carbon-Free Energy',
                xlim=None, ylim=None)
         plt.xticks([])
         plt.savefig(pl.Path(out_dir,f'{year}_carbon_free_year.png'))
