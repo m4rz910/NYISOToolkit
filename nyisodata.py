@@ -1,13 +1,12 @@
 # -*- coding: utf-8 -*-
 
-from datetime import datetime
-
-import io
 import pandas as pd
 import pathlib as pl
 import pytz
 import requests
 import zipfile
+from datetime import datetime
+import io
 import utils
 from data_quality import DataQuality
 
