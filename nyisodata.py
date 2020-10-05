@@ -145,7 +145,7 @@ class NYISOData:
             # Check to make sure that all the expected timestamps exist
             assert timestamps[~timestamps.isin(df.index)].empty, 'Index is missing data! {}'.format(
                 timestamps[~timestamps.isin(df.index)])
-            assert ~df.isnull().values.any(), 'NANs Found! Resampling and interpolation should have handled this.'
+            assert ~df.isnull().values.any(), 'NaNs Found! Resampling and interpolation should have handled this.'
             # Save and return dataset in UTC
             df = df.tz_convert('UTC')
             filepath = pl.Path(self.output_dir, f'{self.year}_{self.dataset}.pkl')
@@ -160,10 +160,9 @@ def construct_databases(years, datasets, reconstruct=False, create_csvs=False):
         for year in years:
             NYISOData(dataset=dataset, year=year, reconstruct=reconstruct, create_csvs=create_csvs)
 
-
 EXTERNAL_TFLOWS_MAP = {'SCH - HQ - NY': 'HQ CHATEAUGUAY',
                        'SCH - HQ_CEDARS': 'HQ CEDARS',
-                       'SCH - HQ_IMPORT_EXPORT': 'SCH - HQ_IMPORT_EXPORT',
+                       'SCH - HQ_IMPORT_EXPORT': 'SCH - HQ_IMPORT_EXPORT', #subset of HQ Chateauguay 
                        'SCH - NE - NY': 'NPX NEW ENGLAND (NE)',
                        'SCH - NPX_1385':'NPX 1385 NORTHPORT (NNC)',
                        'SCH - NPX_CSC': 'NPX CROSS SOUND CABLE (CSC)',
