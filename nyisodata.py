@@ -31,6 +31,8 @@ class NYISOData:
         self.year = str(year) #force to be string if not already
         self.curr_date = datetime.now(tz=pytz.timezone('US/Eastern')) #datetime object for current time
         self.create_csvs = create_csvs #if false will oncreate pickle dbs
+        self.reconstruct = reconstruct
+        self.redownload = redownload
         
         self.storage_dir =  pl.Path(c_dir,'storage')  # where databases and raw csvs will be stored
         self.download_dir = pl.Path(self.storage_dir, 'raw_datafiles', self.dataset, self.year)  # directory that raw csv will be extracted to
@@ -38,25 +40,24 @@ class NYISOData:
         self.dataset_details = None  # namedtuple containing details
         
         self.config()  # sets some of the class attributes
-        self.main(redownload, reconstruct)
+        self.main()
 
     def config(self):
         """Sets important instance attributes and creates directories for storing files"""
         self.dataset_details = utils.fetch_dataset_url_map(self.dataset)
-
         for dir_ in [self.download_dir, self.output_dir]:
             dir_.mkdir(parents=True, exist_ok=True)
 
-    def main(self, redownload, reconstruct):
+    def main(self):
         """Decides whether to download new data and (re)make database or just read existing one."""
         # Check whether to get new data and construct new DB
         file_ = pl.Path(self.output_dir, f'{self.year}_{self.dataset}.pkl')
-        if not file_.exists() or redownload or reconstruct:
-            if redownload:
+        if not file_.exists() or self.redownload or self.reconstruct:
+            if self.redownload:
                 self.get_raw_data()
             #DataQuality(dataset=self.dataset, year=self.year).fix_issues() #edit raw datafiles with known issues
             self.construct_database()
-            #self.DataQuality(dataset=self.dataset, year=self.year).post_db_construction_fixes()
+            #self.DataQuality(dataset=self.dataset, year=self.year, output_dir = self.output_dir).post_db_construction_fixes()
         else:
             self.df = pd.read_pickle(file_)
 
@@ -162,9 +163,9 @@ def construct_databases(years, datasets, reconstruct=False, create_csvs=False):
 
 EXTERNAL_TFLOWS_MAP = {'SCH - HQ - NY': 'HQ CHATEAUGUAY',
                        'SCH - HQ_CEDARS': 'HQ CEDARS',
-                       'SCH - HQ_IMPORT_EXPORT': 'HQ NET',
+                       'SCH - HQ_IMPORT_EXPORT': 'SCH - HQ_IMPORT_EXPORT',
                        'SCH - NE - NY': 'NPX NEW ENGLAND (NE)',
-                       'SCH - NPX_1385': 'NPX 1385 NORTHPORT (NNC)',
+                       'SCH - NPX_1385':'NPX 1385 NORTHPORT (NNC)',
                        'SCH - NPX_CSC': 'NPX CROSS SOUND CABLE (CSC)',
                        'SCH - OH - NY': 'IESO',
                        'SCH - PJ - NY': 'PJM KEYSTONE',

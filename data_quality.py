@@ -6,9 +6,10 @@ lib_dir = pl.Path(__file__).resolve().parent
 
 class DataQuality:
     
-    def __init__(self,dataset,year):
+    def __init__(self,dataset, year, output_dir):
         self.dataset= dataset
         self.year = year
+        self.output_dir = output_dir
         self.fix_specific_issue()
     
     def fix_specific_issue(self):
@@ -25,6 +26,12 @@ class DataQuality:
         if self.dataset == 'interface_flows_5m':
             #remove losses from external interface flows
             return None
+    
+    @staticmethod
+    def issue_external_imports():
+        """Distributes external interface losses proportionally to imported energy"""
+        
+        
             
     @staticmethod
     def issue_fuelmix_2017():

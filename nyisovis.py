@@ -33,10 +33,12 @@ class NYISOVis:
         load = NYISOData(dataset='load_5m',year=year).df.tz_convert('US/Eastern')['NYCA']
         fuel_mix = NYISOData(dataset='fuel_mix_5m',year=year).df.tz_convert('US/Eastern')
         imports = NYISOData(dataset='interface_flows_5m', year=year).df.tz_convert('US/Eastern')
-        imports = imports.loc[:,('External Flows',slice(None),'Flow (MW)')].sum(axis='columns')
+        
+        imports = imports.loc[:, ('External Flows', slice(None), 'Flow (MW)')]
+        imports.drop(('External Flows', 'HQ NET', 'Flow (MW)'), axis='columns', inplace=True)
+        imports = imports.sum(axis='columns')
         
         dfs = {'load':load, 'fuel_mix':fuel_mix, 'imports': imports} # group datasets into dictionary to apply 
-    
         def power_to_energy(df):
             """Energy Converstion [MWh] and Resampling By Summing Energy"""
             return (df * 1/12).resample(f).sum()/1000  #MW->MWh->GWh
@@ -53,6 +55,7 @@ class NYISOVis:
             """Adjust index for months and make index objects to label correctly"""
             if f == 'M':
                 df.index = df.index.shift(-1,'M').shift(1,'D')
+                df = df/1000 # GWh->TWh
             df.index = df.index.astype('O')
             return df       
         dfs = {k: month_adj_object(v) for k, v in dfs.items()}
@@ -67,8 +70,12 @@ class NYISOVis:
         #Legend
         ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.05), ncol=4, fancybox=True, shadow=False)
         #Axes
+        if f == 'M':
+            ylabel = 'Energy [TWh]'
+        else:
+            ylabel = 'Energy [GWh]'
         ax.set(title=f'Historic ({year})',
-               xlabel=None, ylabel='Energy [GWh]',
+               xlabel=None, ylabel=ylabel,
                xlim=[dfs['fuel_mix'].index[0], dfs['fuel_mix'].index[-1]],
                ylim=None)
         ax.xaxis.set_major_formatter(mdates.DateFormatter('%b'))
@@ -93,8 +100,9 @@ class NYISOVis:
         load = NYISOData(dataset='load_5m',year=year).df.tz_convert('US/Eastern')['NYCA']
         fuel_mix = NYISOData(dataset='fuel_mix_5m',year=year).df.tz_convert('US/Eastern')
         imports = NYISOData(dataset='interface_flows_5m', year=year).df.tz_convert('US/Eastern')
+        imports.drop(('External Flows', 'HQ NET', 'Flow (MW)'), axis='columns', inplace=True)
         imports = imports.loc[:,('External Flows',slice(None),'Flow (MW)')].sum(axis='columns')
-    
+
         #Energy Converstion [MWh] and Resampling By Summing Energy
         load = (load * 1/12).resample(f).sum()  
         fuel_mix = (fuel_mix * 1/12).resample(f).sum()   
@@ -130,23 +138,21 @@ class NYISOVis:
                     'Carbon-Free: {:.0f}% + Imports: {:.0f}% (100% by 2040)']
         colors = ['limegreen','lawngreen']
         h_distances = [0.05, 0.05]
-        for t,l,c,h in zip(data, averages,colors,h_distances):
+        for t,l,c,h in zip(data, averages, colors, h_distances):
             avg = fuel_mix[t].sum(axis='index').sum() / load.sum(axis='index') * 100
             avg_imp = fuel_mix[t+['Imports']].sum(axis='index').sum() / load.sum(axis='index') * 100
             ax.axhline(y=avg, xmax=h, color='k', linestyle='solid', lw=1)
             ax.text(h, avg/100, l.format(avg, avg_imp), 
                      bbox=dict(boxstyle='round',ec='black',fc=c, alpha=0.9),
                      transform=ax.transAxes)
+            
         #Legend
-        #handles, labels = ax.get_legend_handles_labels()
         ax.legend(loc='upper center',bbox_to_anchor=(0.45, -0.05),
                   ncol=5, fancybox=True, shadow=False)
-        
         #Axes
         ax.set(title=f'Historic ({year})',
                xlabel=None, ylabel='Percent of Load Served by Carbon-Free Energy',
                xlim=[df.index[0], df.index[-1]], ylim=[0, 100])
-        
         ax.xaxis.set_major_formatter(mdates.DateFormatter('%b'))
         plt.setp(ax.get_xticklabels(), rotation=0, horizontalalignment='center')
         plt.setp(ax.xaxis.get_ticklines() + ax.yaxis.get_ticklines(), markersize=3)
@@ -173,14 +179,14 @@ class NYISOVis:
         # Carbon Free Line
         perc = stats[f'Historic ({year}) [% of Load]'].loc['Total Carbon-Free Generation']
         ax.axhline(y=perc, color='k', linestyle='dashed',
-                    label='CO$_2$e-Free Generation')
-        ax.text(-0.0755, perc/100,'{:.0f}'.format(perc), transform=ax.transAxes)
+                    label='Carbon-Free Generation')
+        ax.text(-0.575, perc,'{:.0f}'.format(perc))
         # Carbon Free + Imports Line
         perc = stats[f'Historic ({year}) [% of Load]'].loc[['Total Carbon-Free Generation',
                                                             'Imports']].sum()
         ax.axhline(y=perc, color='k', linestyle='dotted',
-                    label='CO$_2$e-Free Generation + Imports')
-        ax.text(-0.0755, perc/100,'{:.0f}'.format(perc), transform=ax.transAxes)
+                    label='Carbon-Free Generation + Imports')
+        ax.text(-0.575, perc,'{:.0f}'.format(perc))
         
         #Legend
         handles, labels = ax.get_legend_handles_labels()
