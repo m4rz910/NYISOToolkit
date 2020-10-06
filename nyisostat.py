@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-
 from nyisodata import NYISOData
 import pandas as pd
 

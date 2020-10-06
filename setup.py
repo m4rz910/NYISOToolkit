@@ -6,8 +6,8 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="NYISOToolkit-m4rz910",
-    version="0.0.1",
+    name="NYISOToolkit",
+    version="1.0.0",
     author="m4rz910",
     author_email="viosimosllc@gmail.com",
     description="A collection of modules for accessing power system data, generating statistics, and creating visualizations from the New York Independent System Operator (NYISO).",
