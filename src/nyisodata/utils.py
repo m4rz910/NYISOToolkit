@@ -1,13 +1,13 @@
 from datetime import timedelta
 from collections import namedtuple
-
 import pandas as pd
 import pathlib as pl
 
 BASE_URL = 'http://mis.nyiso.com/public/csv/'
 YAML_FILE = 'dataset_url_map.yml'
 
-dataset_details = namedtuple('dataset_details', ['dataset', 'type', 'url', 'f', 'col', 'val_col'])
+dataset_details = namedtuple('dataset_details',
+                             ['dataset', 'type', 'url', 'f', 'col', 'val_col'])
 
 
 def fetch_months_to_download(cur_date, year_to_collect):
@@ -40,7 +40,6 @@ def check_and_interpolate_nans(df):
     """
     nan_count = df.isna().sum().sum()
     if nan_count > 0:
-        #print(f'Note: {nan_count} NaNs found... interpolating')
         df.interpolate(method='linear', inplace=True)
     return df
 

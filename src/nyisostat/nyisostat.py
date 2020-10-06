@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+import sys
+sys.path.append('..')
 from nyisodata import NYISOData
 import pandas as pd
 

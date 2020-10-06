@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
-from nyisodata import NYISOData
-from nyisostat import NYISOStat
+import sys
+sys.path.append('..')
+from nyisodata.nyisodata import NYISOData
+from nyisostat.nyisodata import NYISOStat
 import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
 import yaml
