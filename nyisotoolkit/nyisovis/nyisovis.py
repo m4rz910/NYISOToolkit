@@ -1,12 +1,10 @@
-# -*- coding: utf-8 -*-
-import sys
-sys.path.append('..')
-from nyisodata.nyisodata import NYISOData
-from nyisostat.nyisodata import NYISOStat
 import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
 import yaml
 import pathlib as pl
+
+from nyisotoolkit.nyisodata.nyisodata import NYISOData
+from nyisotoolkit.nyisostat.nyisostat import NYISOStat
 
 # Figure Configuration
 plt.style.use(['seaborn-whitegrid'])
@@ -18,12 +16,14 @@ plt.rcParams['axes.titleweight'] = 'bold'
 plt.rcParams["axes.grid"] = True
 plt.rcParams['axes.edgecolor'] = '.15'
 
+# Legend Colors
 c_dir = pl.Path(__file__).resolve().parent
 figure_config_path = pl.Path(c_dir, 'legend_colors.yaml')
 with open(figure_config_path) as file:
     all_configs = yaml.load(file, Loader=yaml.FullLoader)
     LEGEND_DEETS = all_configs['legend_colors']
     
+# List of Carbon Free Resources
 CARBONFREE_SOURCES = ['Hydro','Other Renewables','Wind','Nuclear']
 
 

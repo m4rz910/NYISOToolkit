@@ -1,6 +1,13 @@
 # NYISOToolkit
 A collection of modules for accessing power system data data (NYISOData), generating statistics (NYISOStat), and creating visualizations (NYISOVis) from the New York Independent System Operator. 
 
+# Installation
+```python
+git clone https://github.com/m4rz910/NYISOToolkit
+cd NYISOToolkit
+pip install .
+```
+
 ## NYISOVis
 There are three kinds of visualizations currently supported, check them all out in the visualizations folder. The visualizations are focused on communicating New York's status toward achieving the decarbonization goals outlined by the Climate Leadership and Community Protection Act (CLCPA). 
 
@@ -11,7 +18,7 @@ There are three kinds of visualizations currently supported, check them all out 
 
 ### Usage Example
 ```python
-from nyisovis import NYISOVis
+from nyisotoolkit import NYISOData, NYISOStat, NYISOVis
 NYISOVis.fig_clcpa_carbon_free(year='2019', f='D')  # daily (D) or monthy (M) frequency is recommended
 #figures saved in visualization folder by default
 
@@ -37,7 +44,7 @@ All datasets:
 
 ### Usage Example
 ```python
-from nyisodata import NYISOData
+from nyisotoolkit import NYISOData, NYISOStat, NYISOVis
 df = NYISOData(dataset='load_h', year='2019').df # year argument in local time, but returns dataset in UTC 
 
 #If you need to work with data in local time, then convert time zone

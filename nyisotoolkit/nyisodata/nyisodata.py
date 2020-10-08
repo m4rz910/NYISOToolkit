@@ -1,8 +1,3 @@
-# -*- coding: utf-8 -*-
-import sys
-import utils
-#from data_quality import DataQuality
-
 import pandas as pd
 import pathlib as pl
 import pytz
@@ -10,6 +5,9 @@ import requests
 import zipfile
 from datetime import datetime
 import io
+
+from nyisotoolkit.nyisodata import utils
+#from data_quality import DataQuality
 
 
 class NYISOData:
