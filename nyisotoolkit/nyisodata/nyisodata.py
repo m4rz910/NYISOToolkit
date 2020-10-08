@@ -6,8 +6,8 @@ import zipfile
 from datetime import datetime
 import io
 
-from nyisotoolkit.nyisodata import utils
-#from data_quality import DataQuality
+from . import utils
+#from . import DataQuality
 
 
 class NYISOData:
@@ -153,11 +153,13 @@ class NYISOData:
                 df.to_csv(filepath)
             self.df = df
 
-def construct_databases(years, datasets, reconstruct=False, create_csvs=False):
+def construct_databases(years, datasets,
+                        redownload=False, reconstruct=False, create_csvs=False):
     """Constructs all databases for selected years"""
     for dataset in datasets:
         for year in years:
-            NYISOData(dataset=dataset, year=year, reconstruct=reconstruct, create_csvs=create_csvs)
+            NYISOData(dataset=dataset, year=year,
+                      redownload=redownload, reconstruct=reconstruct, create_csvs=create_csvs)
 
 EXTERNAL_TFLOWS_MAP = {'SCH - HQ - NY': 'HQ CHATEAUGUAY',
                        'SCH - HQ_CEDARS': 'HQ CEDARS',
@@ -178,4 +180,5 @@ SUPPORTED_DATASETS = ['load_h', 'load_5m', 'load_forecast_h',
 if __name__ == '__main__':
     years = ['2019']
     datasets = SUPPORTED_DATASETS
-    construct_databases(years=years, datasets=datasets, reconstruct=False, create_csvs=False)
+    construct_databases(years=years, datasets=datasets,
+                        redownload=False, reconstruct=False, create_csvs=False)
