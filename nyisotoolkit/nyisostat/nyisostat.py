@@ -1,13 +1,13 @@
 import pandas as pd
 
-import nyisotoolkit.nyisodata as nd
+from nyisotoolkit.nyisodata.nyisodata import NYISOData
 
 
 class NYISOStat:
     #general
     @staticmethod
     def table_hourly_dataset(dataset,year):
-        df = nd.NYISOData(dataset=dataset,year=year).df.tz_convert('US/Eastern') #MW
+        df = NYISOData(dataset=dataset,year=year).df.tz_convert('US/Eastern') #MW
         df = (df * 1/12).resample('H').sum()/1000  #MW->MWh->GWh
         return df
     
@@ -34,9 +34,9 @@ class NYISOStat:
         Units: TWh
         """
         #Power [MW]
-        load = nd.NYISOData(dataset='load_5m',year=year).df.tz_convert('US/Eastern')['NYCA']
-        fuel_mix = nd.NYISOData(dataset='fuel_mix_5m',year=year).df.tz_convert('US/Eastern')
-        imports = nd.NYISOData(dataset='interface_flows_5m', year='2019').df.tz_convert('US/Eastern')
+        load = NYISOData(dataset='load_5m',year=year).df.tz_convert('US/Eastern')['NYCA']
+        fuel_mix = NYISOData(dataset='fuel_mix_5m',year=year).df.tz_convert('US/Eastern')
+        imports = NYISOData(dataset='interface_flows_5m', year='2019').df.tz_convert('US/Eastern')
         imports.drop(('External Flows', 'HQ NET', 'Flow (MW)'), axis='columns', inplace=True) #HQ Net is a subset of another external flow
         imports = imports.loc[:,('External Flows',slice(None),'Flow (MW)')]
     
@@ -66,8 +66,8 @@ class NYISOStat:
     @staticmethod
     def table_instate_flow(year):
         """Flow between Upstate and Downstate"""
-        df = nd.NYISOData('interface_flows_5m',year).df.tz_convert('US/Eastern')
-        df = df[df['Interface Name']=='TOTAL EAST']['Flow (MW)']
+        df = NYISOData('interface_flows_5m',year).df.tz_convert('US/Eastern')
+        df = df[('Internal Flows','TOTAL EAST','Flow (MW)')]
         df = (df * 1/12).resample('H').sum()/1000  #MW->MWh->GWh
         return df
     
