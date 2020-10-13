@@ -21,7 +21,7 @@ setuptools.setup(
     
     packages=setuptools.find_packages(),
     package_data = {
-        '': ['*.yaml']
+        '': ['*.yml']
     },
     install_requires=['pandas>=1.0.5',
                       'matplotlib>=3.2.2',
