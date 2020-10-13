@@ -20,6 +20,7 @@ setuptools.setup(
     ],
     
     packages=setuptools.find_packages(),
+    include_package_data = True,
     install_requires=['pandas>=1.0.5',
                       'matplotlib>=3.2.2',
                       'pytest>=6.0.1',
