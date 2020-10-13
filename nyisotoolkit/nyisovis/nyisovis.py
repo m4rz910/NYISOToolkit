@@ -17,7 +17,9 @@ plt.rcParams["axes.grid"] = True
 plt.rcParams['axes.edgecolor'] = '.15'
 
 # Legend Colors
-with open(pl.Path('legend_colors.yaml')) as file:
+c_dir = pl.Path(__file__).resolve().parent
+figure_config_path = pl.Path(c_dir, 'legend_colors.yaml')
+with open(figure_config_path) as file:
     all_configs = yaml.load(file, Loader=yaml.FullLoader)
     LEGEND_DEETS = all_configs['legend_colors']
     
@@ -64,7 +66,7 @@ class NYISOVis:
         return dfs
         
     @staticmethod
-    def fig_energy(year='2019', f='D', out_dir = pl.Path('visualizations')):
+    def fig_energy(year='2019', f='D', out_dir = pl.Path(c_dir,'visualizations')):
         #Data
         dfs = NYISOVis.dfs_energy(year=year, f=f)
         
@@ -106,7 +108,7 @@ class NYISOVis:
         
     @staticmethod
     def fig_clcpa_carbon_free(year='2019', f='D',
-                              out_dir = pl.Path('visualizations')):
+                              out_dir = pl.Path(c_dir,'visualizations')):
         """
         Figure Inspiration: NYISO Power Trends 2020 - Figure 12: Production of In-State Renewables & Zero-Emission Resources Relative to 2019 Load 
         """
@@ -155,7 +157,7 @@ class NYISOVis:
         plt.savefig(file, bbox_inches='tight', transparent=True)
             
     @staticmethod
-    def fig_carbon_free_year(year='2019', out_dir = pl.Path('visualizations')):
+    def fig_carbon_free_year(year='2019', out_dir = pl.Path(c_dir,'visualizations')):
         stats = NYISOStat.table_annual_energy(year=year)
         df = stats[f'Historic ({year}) [% of Load]'].drop(index=['Total Renewable Generation',
                                                                  'Total Carbon-Free Generation',
