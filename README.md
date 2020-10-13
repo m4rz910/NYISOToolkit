@@ -3,7 +3,7 @@ A collection of modules for accessing power system data data (NYISOData), genera
 
 # Installation
 ```python
-pip install -e git+https://github.com/m4rz910/NYISOToolkit#egg=nyisotoolkit
+pip install git+https://github.com/m4rz910/NYISOToolkit#egg=nyisotoolkit
 ```
 
 ## NYISOVis
