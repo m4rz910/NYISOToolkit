@@ -91,12 +91,12 @@ class NYISOVis:
         ax.xaxis.set_major_formatter(mdates.DateFormatter('%b'))
         plt.setp(ax.get_xticklabels(), rotation=0, horizontalalignment='center')
         plt.setp(ax.xaxis.get_ticklines() + ax.yaxis.get_ticklines(), markersize=3)
-        
-        #Save
-        file = pl.Path(out_dir, f'{year}_energy_{f}.png')
-        plt.savefig(file, bbox_inches='tight', transparent=True)
-        
                 
+        #Save and show
+        file = pl.Path(out_dir, f'{year}_energy_{f}.png')
+        fig.savefig(file, bbox_inches='tight', transparent=True)
+        fig.show()
+
     @staticmethod
     def dfs_clcpa_carbon_free(year='2019', f='D'):
         dfs = NYISOVis.dfs_energy(year=year, f=f)
@@ -152,9 +152,10 @@ class NYISOVis:
         plt.setp(ax.get_xticklabels(), rotation=0, horizontalalignment='center')
         plt.setp(ax.xaxis.get_ticklines() + ax.yaxis.get_ticklines(), markersize=3)
         
-        #Save
+        #Save and show
         file = pl.Path(out_dir, f'{year}_clcpa_carbon_free_{f}.png')
-        plt.savefig(file, bbox_inches='tight', transparent=True)
+        fig.savefig(file, bbox_inches='tight', transparent=True)
+        fig.show()
             
     @staticmethod
     def fig_carbon_free_year(year='2019', out_dir = pl.Path(c_dir,'visualizations')):
@@ -192,8 +193,9 @@ class NYISOVis:
         ax.set(title=f'Historic ({year})',
                xlabel=year, ylabel='Percent of Load Served by Carbon-Free Energy',
                xlim=None, ylim=None)
-        plt.xticks([])
-        plt.savefig(pl.Path(out_dir,f'{year}_carbon_free_year.png'))
+        ax.xticks([])
+        fig.savefig(pl.Path(out_dir,f'{year}_carbon_free_year.png'))
+        fig.show()
 
     def fig_carbon_free_years(years):
         """Todo: stacked area chart over time using nyisostat annual summary"""
