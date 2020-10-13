@@ -52,7 +52,7 @@ class NYISOData:
         # Check whether to get new data and construct new DB
         file_ = pl.Path(self.output_dir, f'{self.year}_{self.dataset}.pkl')
         if not file_.exists() or self.redownload or self.reconstruct:
-            if self.redownload:
+            if not file_.exists() or self.redownload:
                 self.get_raw_data()
             #DataQuality(dataset=self.dataset, year=self.year).fix_issues() #edit raw datafiles with known issues
             self.construct_database()
