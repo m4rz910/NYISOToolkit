@@ -13,7 +13,7 @@ from . import utils
 class NYISOData:
 
     def __init__(self, dataset, year,
-                 redownload=True, reconstruct=True, create_csvs=False,
+                 redownload=False, reconstruct=False, create_csvs=False,
                  c_dir=pl.Path(__file__).resolve().parent):
         """
         Creates a local database based on dataset name and year stored in UTC.

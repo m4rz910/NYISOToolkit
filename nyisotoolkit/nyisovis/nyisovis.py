@@ -17,8 +17,7 @@ plt.rcParams["axes.grid"] = True
 plt.rcParams['axes.edgecolor'] = '.15'
 
 # Legend Colors
-figure_config_path = pl.Path('./legend_colors.yaml')
-with open(figure_config_path) as file:
+with open(pl.Path('legend_colors.yaml')) as file:
     all_configs = yaml.load(file, Loader=yaml.FullLoader)
     LEGEND_DEETS = all_configs['legend_colors']
     
