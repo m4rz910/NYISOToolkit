@@ -65,7 +65,7 @@ class NYISOData:
         month_range = utils.fetch_months_to_download(self.curr_date, self.year)
 
         # Download and extract all csv files month by month
-        print(f'Downloading {self.year} {self.dataset} from NYISO...', end='')
+        print(f'Downloading {self.year} {self.dataset}...', end='')
         for month in month_range:
             r = requests.get(self.dataset_details.url.format(month))
             if r.ok:

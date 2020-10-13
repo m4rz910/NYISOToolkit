@@ -39,7 +39,7 @@ class NYISOVis:
         fuel_mix = NYISOData(dataset='fuel_mix_5m',year=year).df.tz_convert('US/Eastern')
         imports = NYISOData(dataset='interface_flows_5m', year=year).df.tz_convert('US/Eastern')
         imports = imports.loc[:, ('External Flows', slice(None), 'Flow (MW)')]
-        imports.drop(('External Flows', 'HQ NET', 'Flow (MW)'), axis='columns', inplace=True) #HQ Net is a subset of another external flow
+        imports.drop(('External Flows', 'SCH - HQ_IMPORT_EXPORT', 'Flow (MW)'), axis='columns', inplace=True) #'SCH - HQ_IMPORT_EXPORT' is a subset of another external flow
         imports = imports.sum(axis='columns')
         
         dfs = {'load':load, 'fuel_mix':fuel_mix, 'imports': imports} # group datasets into dictionary to apply 
