@@ -35,8 +35,8 @@ class NYISOVis:
             raise ValueError('Frequency Not Supported!')
         
         #Power [MW]
-        load = NYISOData(dataset='load_5m',year=year).df.tz_convert('US/Eastern')['NYCA']
-        fuel_mix = NYISOData(dataset='fuel_mix_5m',year=year).df.tz_convert('US/Eastern')
+        load = NYISOData(dataset='load_5m', year=year).df.tz_convert('US/Eastern')['NYCA']
+        fuel_mix = NYISOData(dataset='fuel_mix_5m', year=year).df.tz_convert('US/Eastern')
         imports = NYISOData(dataset='interface_flows_5m', year=year).df.tz_convert('US/Eastern')
         imports = imports.loc[:, ('External Flows', slice(None), 'Flow (MW)')]
         imports.drop(('External Flows', 'SCH - HQ_IMPORT_EXPORT', 'Flow (MW)'), axis='columns', inplace=True) #'SCH - HQ_IMPORT_EXPORT' is a subset of another external flow
