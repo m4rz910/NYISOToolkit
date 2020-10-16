@@ -71,7 +71,7 @@ class NYISOVis:
         dfs = NYISOVis.dfs_energy(year=year, f=f)
         
         #Plots
-        fig, ax = plt.subplots(figsize=(10,5), dpi=300)
+        fig, ax = plt.subplots(figsize=(6,3), dpi=300)
         dfs['fuel_mix'].plot.area(ax=ax,
                                   color=[LEGEND_DEETS.get(x, '#333333') for x in dfs['fuel_mix'].columns],
                                   alpha=0.9, lw=0) #fuel mix
@@ -93,7 +93,7 @@ class NYISOVis:
         plt.setp(ax.xaxis.get_ticklines() + ax.yaxis.get_ticklines(), markersize=3)
                 
         #Save and show
-        file = pl.Path(out_dir, f'{year}_energy_{f}.png')
+        file = pl.Path(out_dir, f'{year}_energy_{f}.svg')
         fig.savefig(file, bbox_inches='tight', transparent=True)
         fig.show()
 
@@ -115,7 +115,7 @@ class NYISOVis:
         dfs = NYISOVis.dfs_clcpa_carbon_free(year=year, f=f) # Data
         
         #Plot Carbon-free Fraction
-        fig, ax = plt.subplots(figsize=(10,5), dpi=300)
+        fig, ax = plt.subplots(figsize=(6,3), dpi=300)
         dfs['df'].plot.area(ax=ax,
                             color=[LEGEND_DEETS.get(x, '#333333') for x in dfs['df'].columns],
                             alpha=0.9, lw=0)
@@ -153,7 +153,7 @@ class NYISOVis:
         plt.setp(ax.xaxis.get_ticklines() + ax.yaxis.get_ticklines(), markersize=3)
         
         #Save and show
-        file = pl.Path(out_dir, f'{year}_clcpa_carbon_free_{f}.png')
+        file = pl.Path(out_dir, f'{year}_clcpa_carbon_free_{f}.svg')
         fig.savefig(file, bbox_inches='tight', transparent=True)
         fig.show()
             
@@ -194,7 +194,7 @@ class NYISOVis:
                xlabel=year, ylabel='Percent of Load Served by Carbon-Free Energy',
                xlim=None, ylim=None)
         ax.xticks([])
-        fig.savefig(pl.Path(out_dir,f'{year}_carbon_free_year.png'))
+        fig.savefig(pl.Path(out_dir,f'{year}_carbon_free_year.svg'))
         fig.show()
 
     def fig_carbon_free_years(years):
