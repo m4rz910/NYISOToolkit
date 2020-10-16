@@ -1,9 +1,9 @@
 # NYISOToolkit
-A collection of modules for accessing power system data data (NYISOData), generating statistics (NYISOStat), and creating visualizations (NYISOVis) from the New York Independent System Operator. 
+A package for accessing power system data data (NYISOData), generating statistics (NYISOStat), and creating visualizations (NYISOVis) from the New York Independent System Operator (NYISO). 
 
 # Installation
 ```python
-pip install -e git+https://github.com/m4rz910/NYISOToolkit#egg=nyisotoolkit
+pip install git+https://github.com/m4rz910/NYISOToolkit#egg=nyisotoolkit
 ```
 
 ## NYISOVis
