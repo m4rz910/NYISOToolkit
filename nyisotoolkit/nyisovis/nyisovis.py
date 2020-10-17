@@ -167,7 +167,7 @@ class NYISOVis:
                                                                  'Load'])
         df = df.to_frame().T
         #Plot
-        fig, ax = plt.subplots(figsize=(6,8), dpi=300)
+        fig, ax = plt.subplots(figsize=(4,8), dpi=300)
         df.plot.bar(stacked=True, ax=ax,
                     color=[LEGEND_DEETS.get(x, '#333333') for x in df.columns],
                     alpha=0.9)
@@ -194,7 +194,8 @@ class NYISOVis:
                xlabel=year, ylabel='Percent of Load Served by Carbon-Free Energy',
                xlim=None, ylim=None)
         plt.xticks([])
-        fig.savefig(pl.Path(out_dir,f'{year}_carbon_free_year.svg'), transparent=True)
+        file = pl.Path(out_dir,f'{year}_carbon_free_year.svg')
+        fig.savefig(file, bbox_inches='tight', transparent=True)
         fig.show()
 
     def fig_carbon_free_years(years):
