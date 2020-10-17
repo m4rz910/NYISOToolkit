@@ -194,7 +194,7 @@ class NYISOVis:
                xlabel=year, ylabel='Percent of Load Served by Carbon-Free Energy',
                xlim=None, ylim=None)
         plt.xticks([])
-        fig.savefig(pl.Path(out_dir,f'{year}_carbon_free_year.png'))
+        fig.savefig(pl.Path(out_dir,f'{year}_carbon_free_year.svg'))
         fig.show()
 
     def fig_carbon_free_years(years):
