@@ -1,5 +1,5 @@
 # NYISOToolkit
-A package for accessing power system data data (NYISOData), generating statistics (NYISOStat), and creating visualizations (NYISOVis) from the New York Independent System Operator (NYISO). 
+A package for accessing power system data (NYISOData), generating statistics (NYISOStat), and creating visualizations (NYISOVis) from the New York Independent System Operator (NYISO). 
 
 # Installation
 ```python
