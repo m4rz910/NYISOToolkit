@@ -60,3 +60,21 @@ lbmp_rt_5m:
   f: 5T
   col: Name
   val_col:  # None
+
+rtasp:
+  type: asp
+  url:
+    pre: rtasp
+    post: rtasp_csv.zip
+  f: 5T
+  col: Name
+  val_col:  # None
+
+damasp:
+  type: asp
+  url:
+    pre: damasp
+    post: damasp_csv.zip
+  f: H
+  col: Name
+  val_col:  # None
