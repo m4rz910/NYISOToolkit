@@ -142,6 +142,11 @@ class NYISOVis:
         ax.xaxis.set_major_formatter(mdates.DateFormatter('%b'))
         plt.setp(ax.get_xticklabels(), rotation=0, horizontalalignment='center')
         plt.setp(ax.xaxis.get_ticklines() + ax.yaxis.get_ticklines(), markersize=3)
+        # NYISOToolkit label and source
+        ax.text(0.91, 0.92, 'NYISOToolkit\nDatasource: NYISO OASIS',
+                c='black', fontsize='7', horizontalalignment='center',
+                bbox=dict(boxstyle='round', ec='black', fc='lightgray', alpha=0.9),
+                transform=ax.transAxes)
                 
         #Save and show
         file = pl.Path(self.out_dir, f'{self.year}_energy_{f}.svg')
@@ -209,6 +214,11 @@ class NYISOVis:
             ax.text(h, avg/100, l.format(avg, avg_imp), 
                      bbox=dict(boxstyle='round',ec='black',fc=c, alpha=0.9),
                      transform=ax.transAxes)
+        # NYISOToolkit label and source
+        ax.text(0.91, 0.92, 'NYISOToolkit\nDatasource: NYISO OASIS',
+                c='black', fontsize='7', horizontalalignment='center',
+                bbox=dict(boxstyle='round', ec='black', fc='lightgray', alpha=0.9),
+                transform=ax.transAxes)
             
         #Legend
         ax.legend(loc='upper center',bbox_to_anchor=(0.45, -0.05),
@@ -252,6 +262,11 @@ class NYISOVis:
         ax.axhline(y=perc, color='k', linestyle='dotted',
                     label='Carbon-Free Generation + Imports')
         ax.text(-0.575, perc,'{:.0f}'.format(perc))
+        # NYISOToolkit label and source
+        ax.text(1.5, 0.8, 'NYISOToolkit\nDatasource: NYISO OASIS',
+                c='black', fontsize='8', horizontalalignment='center',
+                bbox=dict(boxstyle='round', ec='black', fc='lightgray', alpha=0.9),
+                transform=ax.transAxes)
         
         #Legend
         handles, labels = ax.get_legend_handles_labels()
@@ -263,10 +278,12 @@ class NYISOVis:
                xlabel=self.year, ylabel='Percent of Load Served by Carbon-Free Energy',
                xlim=None, ylim=None)
         plt.xticks([])
+        
+        #Save
         file = pl.Path(self.out_dir,f'{self.year}_carbon_free_year.svg')
         fig.savefig(file, bbox_inches='tight', transparent=True)
-        # fig.show()
-
+        # fig.show()        
+        
     def fig_carbon_free_years():
         """Todo: stacked area chart over time using nyisostat annual summary"""
         return
