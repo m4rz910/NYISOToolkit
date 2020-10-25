@@ -61,7 +61,7 @@ lbmp_rt_5m:
   col: Name
   val_col:  # None
 
-rtasp:
+asp_rt:
   type: asp
   url:
     pre: rtasp
@@ -70,7 +70,7 @@ rtasp:
   col: Name
   val_col:  # None
 
-damasp:
+asp_dam:
   type: asp
   url:
     pre: damasp
