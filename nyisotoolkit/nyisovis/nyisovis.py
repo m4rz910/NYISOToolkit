@@ -62,7 +62,8 @@ class NYISOVis:
         self.year = year
         self.out_dir = out_dir
 
-    def tables_energy(self, f='D'):
+    @staticmethod
+    def tables_energy(year, f='D'):
         """Gathers datasets needed to produce fig_energy
         
         Parameters
@@ -80,9 +81,9 @@ class NYISOVis:
             raise ValueError('Frequency Not Supported!')
         
         #Power [MW]
-        load = NYISOData(dataset='load_5m', year=self.year).df.tz_convert('US/Eastern')['NYCA']
-        fuel_mix = NYISOData(dataset='fuel_mix_5m', year=self.year).df.tz_convert('US/Eastern')
-        imports = NYISOData(dataset='interface_flows_5m', year=self.year).df.tz_convert('US/Eastern')
+        load = NYISOData(dataset='load_5m', year=year).df.tz_convert('US/Eastern')['NYCA']
+        fuel_mix = NYISOData(dataset='fuel_mix_5m', year=year).df.tz_convert('US/Eastern')
+        imports = NYISOData(dataset='interface_flows_5m', year=year).df.tz_convert('US/Eastern')
         imports = imports.loc[:, ('External Flows', slice(None), 'Flow (MW)')]
         imports.drop(('External Flows', 'SCH - HQ IMPORT EXPORT', 'Flow (MW)'),
                      axis='columns', inplace=True) #'SCH - HQ IMPORT EXPORT' is a subset of another external flow
@@ -120,7 +121,7 @@ class NYISOVis:
             Frequency of graph to generate (daily ('D') and monthly ('M') recommended)
         """
         
-        tables = NYISOVis.tables_energy(year=self.year, f=f) #Data
+        tables = self.tables_energy(year=self.year, f=f) #Data
         #Plots
         fig, ax = plt.subplots(figsize=(10,5), dpi=300)
         tables['fuel_mix'].plot.area(ax=ax,
@@ -147,7 +148,8 @@ class NYISOVis:
         fig.savefig(file, bbox_inches='tight', transparent=True)
         fig.show()
 
-    def tables_clcpa_carbon_free(self, f='D'):
+    @staticmethod
+    def tables_clcpa_carbon_free(year, f='D'):
         """Gathers datasets needed to produce fig_clcpa_carbon_free
         
         Parameters
@@ -161,7 +163,7 @@ class NYISOVis:
             Dictionary containing dataset names as keys and respective Dataframes
         """
         
-        tables = NYISOVis.tables_energy(year=self.year, f=f)
+        tables = NYISOVis.tables_energy(year=year, f=f)
         #Calculating Carbon-free Fraction [%]
         tables['ef'] = tables['fuel_mix'].div(tables['load'], axis='index') * 100
         tables['ef']['percent_carbon_free'] = tables['ef'][CARBONFREE_SOURCES].sum(axis='columns')
@@ -179,7 +181,7 @@ class NYISOVis:
             Frequency of graph to generate (daily ('D') and monthly ('M') recommended)
         
         """
-        tables = NYISOVis.tables_clcpa_carbon_free(year=self.year, f=f) # Data
+        tables = self.tables_clcpa_carbon_free(year=self.year, f=f) # Data
         
         #Plot Carbon-free Fraction
         fig, ax = plt.subplots(figsize=(10,5), dpi=300)
