@@ -17,7 +17,7 @@ There are three kinds of visualizations currently supported - check them all out
 ### Usage Example
 ```python
 from nyisotoolkit import NYISOData, NYISOStat, NYISOVis
-NYISOVis.fig_clcpa_carbon_free(year='2019', f='D')  # daily (D) or monthy (M) frequency is recommended
+NYISOVis(year='2019').fig_clcpa_carbon_free(f='D')  # daily (D) or monthy (M) frequency is recommended
 #figures saved in nyisotoolkit/nyisovis/visualization folder by default
 
 ```
