@@ -34,6 +34,8 @@ Datasets Currently Supported:
 - interface_flows_5m (5-min internal and external flows between regions)
 - lbmp_dam_h (hourly day-ahead zonal location based marginal price)
 - lbmp_rt_5m (5-min reak time zonal location based marginal price)
+- rtasp (5-min real time zonal ancillary service prices)
+- damasp (hourly day-ahead zonal ancillary service prices)
 
 All datasets:
 - Timezone: Coordinated Universal Time [UTC]
@@ -126,3 +128,11 @@ LBMP (lbmp_rt_5m)
 - NYISO Market Participant Guide
 - Units: Price [$/MWh]
 - Frequency: Hour
+
+Ancillary Service Price (rtasp)
+- Units: Price [$/MWh]
+- Frequency: Hour
+
+Ancillary Service Price (damasp)
+- Units: Price [$/MWh]
+- Frequency: 5-min
