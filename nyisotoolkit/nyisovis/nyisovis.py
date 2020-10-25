@@ -1,20 +1,21 @@
+import pathlib as pl
+
 import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
 import yaml
-import pathlib as pl
 
 from nyisotoolkit.nyisodata.nyisodata import NYISOData
 from nyisotoolkit.nyisostat.nyisostat import NYISOStat
 
 # Figure Configuration
 plt.style.use(['seaborn-whitegrid'])
-plt.rcParams['font.weight'] = 'bold'
-plt.rcParams['font.size'] = 12
-plt.rcParams['axes.labelweight'] = 'bold'
-plt.rcParams['lines.linewidth'] = 2
-plt.rcParams['axes.titleweight'] = 'bold'
-plt.rcParams["axes.grid"] = True
-plt.rcParams['axes.edgecolor'] = '.15'
+plt.rcParams.update({'font.weight': 'bold',
+                     'font.size': 12,
+                     'axes.labelweight': 'bold',
+                     'lines.linewidth': 2,
+                     'axes.titleweight': 'bold',
+                     'axes.grid': True,
+                     'axes.edgecolor': '.15'})
 
 # Legend Colors
 c_dir = pl.Path(__file__).resolve().parent
@@ -28,32 +29,77 @@ CARBONFREE_SOURCES = ['Hydro','Other Renewables','Wind','Nuclear']
 
 
 class NYISOVis:
+    """A class used to create power system visualizations from the NYISOData and NYISOStat modules
+    
+    Attributes
+    ----------
+    year: str, int
+        Year of dataset(s) to use for graphs
+    out_dir: Pathlib Object, optional
+        Path to a directory to save the figures to in SVG format (default location is in nyisotoolkit/nyisovis/visualizations)
         
-    @staticmethod
-    def dfs_energy(year='2019', f='D'):
+    Methods
+    -------
+    tables_energy
+        Gathers datasets needed to produce fig_energy
+    fig_energy
+        Produces a stacked area chart showing the trend of energy generation by energy source from tables_energy
+    tables_clcpa_carbon_free
+        Gathers datasets needed to produce fig_clcpa_carbon_free
+    fig_clcpa_carbon_free
+        Produces a stacked area chart showing the trend of carbon-free that served load by energy source from tables_clcpa_carbon_free
+    fig_carbon_free_year
+        Produces a stacked bar chart of annual percent carbon-free by energy source
+    """
+    
+    def __init__(self, year='2019', out_dir = pl.Path(c_dir,'visualizations')):
+        """
+        Parameters
+        ----------
+        year: str, int
+            Year of dataset(s) to use for graphs
+        """
+        self.year = year
+        self.out_dir = out_dir
+
+    def tables_energy(self, f='D'):
+        """Gathers datasets needed to produce fig_energy
+        
+        Parameters
+        ----------
+        f: str
+            Frequency of graph to generate (daily ('D') and monthly ('M') recommended)
+        
+        Returns
+        -------
+        tables: Dictionary
+            Dictionary containing dataset names as keys and respective Dataframes
+        """
+        
         if f in ['Y']:
             raise ValueError('Frequency Not Supported!')
         
         #Power [MW]
-        load = NYISOData(dataset='load_5m', year=year).df.tz_convert('US/Eastern')['NYCA']
-        fuel_mix = NYISOData(dataset='fuel_mix_5m', year=year).df.tz_convert('US/Eastern')
-        imports = NYISOData(dataset='interface_flows_5m', year=year).df.tz_convert('US/Eastern')
+        load = NYISOData(dataset='load_5m', year=self.year).df.tz_convert('US/Eastern')['NYCA']
+        fuel_mix = NYISOData(dataset='fuel_mix_5m', year=self.year).df.tz_convert('US/Eastern')
+        imports = NYISOData(dataset='interface_flows_5m', year=self.year).df.tz_convert('US/Eastern')
         imports = imports.loc[:, ('External Flows', slice(None), 'Flow (MW)')]
-        imports.drop(('External Flows', 'SCH - HQ_IMPORT_EXPORT', 'Flow (MW)'), axis='columns', inplace=True) #'SCH - HQ_IMPORT_EXPORT' is a subset of another external flow
+        imports.drop(('External Flows', 'SCH - HQ IMPORT EXPORT', 'Flow (MW)'),
+                     axis='columns', inplace=True) #'SCH - HQ IMPORT EXPORT' is a subset of another external flow
         imports = imports.sum(axis='columns')
         
-        dfs = {'load':load, 'fuel_mix':fuel_mix, 'imports': imports} # group datasets into dictionary to apply 
+        tables = {'load':load, 'fuel_mix':fuel_mix, 'imports': imports} # group datasets into dictionary to apply 
         def power_to_energy(df):
             """Energy Converstion [MWh] and Resampling By Summing Energy"""
             return (df * 1/12).resample(f).sum()/1000  #MW->MWh->GWh
-        dfs = {k: power_to_energy(v) for k, v in dfs.items()}
+        tables = {k: power_to_energy(v) for k, v in tables.items()}
         
-        dfs['fuel_mix']['Imports'] = dfs['imports'] #add imports to fuel mix
-        del dfs['imports'] #remove imports from the dfs list
+        tables['fuel_mix']['Imports'] = tables['imports'] #add imports to fuel mix
+        del tables['imports'] #remove imports from the tables list
         
         order = ['Nuclear','Hydro','Other Renewables','Wind','Natural Gas','Dual Fuel',
                  'Other Fossil Fuels', 'Imports'] 
-        dfs['fuel_mix'] = dfs['fuel_mix'][order] #fix order
+        tables['fuel_mix'] = tables['fuel_mix'][order] #fix order
         
         def month_adj_object(df):
             """Adjust index for months and make index objects to label correctly"""
@@ -62,66 +108,87 @@ class NYISOVis:
                 df = df/1000 # GWh->TWh
             df.index = df.index.astype('O')
             return df       
-        dfs = {k: month_adj_object(v) for k, v in dfs.items()}
-        return dfs
+        tables = {k: month_adj_object(v) for k, v in tables.items()}
+        return tables
         
-    @staticmethod
-    def fig_energy(year='2019', f='D', out_dir = pl.Path(c_dir,'visualizations')):
-        #Data
-        dfs = NYISOVis.dfs_energy(year=year, f=f)
+    def fig_energy(self, f):
+        """Produces a stacked area chart showing the trend of energy generation by energy source from tables_energy
         
+        Parameters
+        ----------
+        f: str
+            Frequency of graph to generate (daily ('D') and monthly ('M') recommended)
+        """
+        
+        tables = NYISOVis.tables_energy(year=self.year, f=f) #Data
         #Plots
         fig, ax = plt.subplots(figsize=(10,5), dpi=300)
-        dfs['fuel_mix'].plot.area(ax=ax,
-                                  color=[LEGEND_DEETS.get(x, '#333333') for x in dfs['fuel_mix'].columns],
+        tables['fuel_mix'].plot.area(ax=ax,
+                                  color=[LEGEND_DEETS.get(x, '#333333') for x in tables['fuel_mix'].columns],
                                   alpha=0.9, lw=0) #fuel mix
-        dfs['load'].plot.line(ax=ax, linestyle='dashed', linewidth=1, color='k', label='Load') #load line
+        tables['load'].plot.line(ax=ax, linestyle='dashed', linewidth=1, color='k', label='Load') #load line
         
-        #Legend
-        ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.05), ncol=4, fancybox=True, shadow=False)
+        ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.05), ncol=4, fancybox=True, shadow=False) #Legend
         #Axes
         if f == 'M':
             ylabel = 'Energy [TWh]'
         else:
             ylabel = 'Energy [GWh]'
-        ax.set(title=f'Historic ({year})',
+        ax.set(title=f'Historic ({self.year})',
                xlabel=None, ylabel=ylabel,
-               xlim=[dfs['fuel_mix'].index[0], dfs['fuel_mix'].index[-1]],
+               xlim=[tables['fuel_mix'].index[0], tables['fuel_mix'].index[-1]],
                ylim=None)
         ax.xaxis.set_major_formatter(mdates.DateFormatter('%b'))
         plt.setp(ax.get_xticklabels(), rotation=0, horizontalalignment='center')
         plt.setp(ax.xaxis.get_ticklines() + ax.yaxis.get_ticklines(), markersize=3)
                 
         #Save and show
-        file = pl.Path(out_dir, f'{year}_energy_{f}.svg')
+        file = pl.Path(self.out_dir, f'{self.year}_energy_{f}.svg')
         fig.savefig(file, bbox_inches='tight', transparent=True)
         fig.show()
 
-    @staticmethod
-    def dfs_clcpa_carbon_free(year='2019', f='D'):
-        dfs = NYISOVis.dfs_energy(year=year, f=f)
-        #Calculating Carbon-free Fraction [%]
-        dfs['ef'] = dfs['fuel_mix'].div(dfs['load'], axis='index') * 100
-        dfs['ef']['percent_carbon_free'] = dfs['ef'][CARBONFREE_SOURCES].sum(axis='columns')
-        dfs['df'] = dfs['ef'][CARBONFREE_SOURCES] #plot only carbon free resources
-        return dfs
+    def tables_clcpa_carbon_free(self, f='D'):
+        """Gathers datasets needed to produce fig_clcpa_carbon_free
         
-    @staticmethod
-    def fig_clcpa_carbon_free(year='2019', f='D',
-                              out_dir = pl.Path(c_dir,'visualizations')):
+        Parameters
+        ----------
+        f: str
+            Frequency of graph to generate (daily ('D') and monthly ('M') recommended)
+            
+        Returns
+        -------
+        tables: Dictionary
+            Dictionary containing dataset names as keys and respective Dataframes
         """
+        
+        tables = NYISOVis.tables_energy(year=self.year, f=f)
+        #Calculating Carbon-free Fraction [%]
+        tables['ef'] = tables['fuel_mix'].div(tables['load'], axis='index') * 100
+        tables['ef']['percent_carbon_free'] = tables['ef'][CARBONFREE_SOURCES].sum(axis='columns')
+        tables['df'] = tables['ef'][CARBONFREE_SOURCES] #plot only carbon free resources
+        return tables
+        
+    def fig_clcpa_carbon_free(self, f='D'):
+        """Produces a stacked area chart showing the trend of carbon-free that served load by energy source from tables_clcpa_carbon_free
+        
         Figure Inspiration: NYISO Power Trends 2020 - Figure 12: Production of In-State Renewables & Zero-Emission Resources Relative to 2019 Load 
+        
+        Parameters
+        ----------
+        f: str
+            Frequency of graph to generate (daily ('D') and monthly ('M') recommended)
+        
         """
-        dfs = NYISOVis.dfs_clcpa_carbon_free(year=year, f=f) # Data
+        tables = NYISOVis.tables_clcpa_carbon_free(year=self.year, f=f) # Data
         
         #Plot Carbon-free Fraction
         fig, ax = plt.subplots(figsize=(10,5), dpi=300)
-        dfs['df'].plot.area(ax=ax,
-                            color=[LEGEND_DEETS.get(x, '#333333') for x in dfs['df'].columns],
+        tables['df'].plot.area(ax=ax,
+                            color=[LEGEND_DEETS.get(x, '#333333') for x in tables['df'].columns],
                             alpha=0.9, lw=0)
        
         #Plot Import Line
-        gen_imp = dfs['ef'][CARBONFREE_SOURCES+['Imports']].sum(axis='columns')
+        gen_imp = tables['ef'][CARBONFREE_SOURCES+['Imports']].sum(axis='columns')
         gen_imp.index = gen_imp.index.astype('O')
         gen_imp.plot.line(ax=ax,linestyle='dotted',
                           linewidth=1, color='k', label='Total + Imports')
@@ -134,8 +201,8 @@ class NYISOVis:
         colors = ['limegreen','lawngreen']
         h_distances = [0.05, 0.05]
         for t,l,c,h in zip(data, averages, colors, h_distances):
-            avg = dfs['fuel_mix'][t].sum(axis='index').sum() / dfs['load'].sum(axis='index') * 100
-            avg_imp = dfs['fuel_mix'][t+['Imports']].sum(axis='index').sum() / dfs['load'].sum(axis='index') * 100
+            avg = tables['fuel_mix'][t].sum(axis='index').sum() / tables['load'].sum(axis='index') * 100
+            avg_imp = tables['fuel_mix'][t+['Imports']].sum(axis='index').sum() / tables['load'].sum(axis='index') * 100
             ax.axhline(y=avg, xmax=h, color='k', linestyle='solid', lw=1)
             ax.text(h, avg/100, l.format(avg, avg_imp), 
                      bbox=dict(boxstyle='round',ec='black',fc=c, alpha=0.9),
@@ -145,22 +212,22 @@ class NYISOVis:
         ax.legend(loc='upper center',bbox_to_anchor=(0.45, -0.05),
                   ncol=5, fancybox=True, shadow=False)
         #Axes
-        ax.set(title=f'Historic ({year})',
+        ax.set(title=f'Historic ({self.year})',
                xlabel=None, ylabel='Percent of Load Served by Carbon-Free Energy',
-               xlim=[dfs['df'].index[0], dfs['df'].index[-1]], ylim=[0, 100])
+               xlim=[tables['df'].index[0], tables['df'].index[-1]], ylim=[0, 100])
         ax.xaxis.set_major_formatter(mdates.DateFormatter('%b'))
         plt.setp(ax.get_xticklabels(), rotation=0, horizontalalignment='center')
         plt.setp(ax.xaxis.get_ticklines() + ax.yaxis.get_ticklines(), markersize=3)
         
         #Save and show
-        file = pl.Path(out_dir, f'{year}_clcpa_carbon_free_{f}.svg')
+        file = pl.Path(self.out_dir, f'{self.year}_clcpa_carbon_free_{f}.svg')
         fig.savefig(file, bbox_inches='tight', transparent=True)
         fig.show()
             
-    @staticmethod
-    def fig_carbon_free_year(year='2019', out_dir = pl.Path(c_dir,'visualizations')):
-        stats = NYISOStat.table_annual_energy(year=year)
-        df = stats[f'Historic ({year}) [% of Load]'].drop(index=['Total Renewable Generation',
+    def fig_carbon_free_year(self):
+        """Produces a stacked bar chart of annual percent carbon-free by energy source"""
+        stats = NYISOStat.table_annual_energy(year=self.year)
+        df = stats[f'Historic ({self.year}) [% of Load]'].drop(index=['Total Renewable Generation',
                                                                  'Total Carbon-Free Generation',
                                                                  'Total Generation',
                                                                  'Total Generation + Imports',
@@ -173,12 +240,12 @@ class NYISOVis:
                     alpha=0.9)
         #Averages and Goals
         # Carbon Free Line
-        perc = stats[f'Historic ({year}) [% of Load]'].loc['Total Carbon-Free Generation']
+        perc = stats[f'Historic ({self.year}) [% of Load]'].loc['Total Carbon-Free Generation']
         ax.axhline(y=perc, color='k', linestyle='dashed',
                     label='Carbon-Free Generation')
         ax.text(-0.575, perc,'{:.0f}'.format(perc))
         # Carbon Free + Imports Line
-        perc = stats[f'Historic ({year}) [% of Load]'].loc[['Total Carbon-Free Generation',
+        perc = stats[f'Historic ({self.year}) [% of Load]'].loc[['Total Carbon-Free Generation',
                                                             'Imports']].sum()
         ax.axhline(y=perc, color='k', linestyle='dotted',
                     label='Carbon-Free Generation + Imports')
@@ -190,25 +257,18 @@ class NYISOVis:
                   loc='right', bbox_to_anchor=(2.2, 0.5),
                   ncol=1, fancybox=True, shadow=False)
         #Axes
-        ax.set(title=f'Historic ({year})',
-               xlabel=year, ylabel='Percent of Load Served by Carbon-Free Energy',
+        ax.set(title=f'Historic ({self.year})',
+               xlabel=self.year, ylabel='Percent of Load Served by Carbon-Free Energy',
                xlim=None, ylim=None)
         plt.xticks([])
-        file = pl.Path(out_dir,f'{year}_carbon_free_year.svg')
+        file = pl.Path(self.out_dir,f'{self.year}_carbon_free_year.svg')
         fig.savefig(file, bbox_inches='tight', transparent=True)
         fig.show()
 
-    def fig_carbon_free_years(years):
+    def fig_carbon_free_years():
         """Todo: stacked area chart over time using nyisostat annual summary"""
         return
     
     def net_load():
         """Todo: Load vs Net Load Shape"""
         return
-            
-if __name__ == '__main__':
-    for year in ['2019']:
-        NYISOVis.fig_carbon_free_year(year=year)
-        for f in ['D','M']:
-            NYISOVis.fig_energy(year=year, f=f)
-            NYISOVis.fig_clcpa_carbon_free(year=year, f=f)

@@ -1,5 +1,6 @@
-import pandas as pd
 import pathlib as pl
+
+import pandas as pd
 import pytz
 import requests
 import zipfile
@@ -171,7 +172,7 @@ class NYISOData:
                 f = lambda x: 'External Flows' if x in EXTERNAL_TFLOWS_MAP.values() else 'Internal Flows'
                 df.columns = pd.MultiIndex.from_tuples([(f(c[0]),) + c for c in df.columns])
                 
-            df = df.tz_convert('US/Eastern'.loc[start:end]) #Convert back to US/Eastern to select time period in local time
+            df = df.tz_convert('US/Eastern').loc[start:end] #Convert back to US/Eastern to select time
 
             # Checks
             assert timestamps[~timestamps.isin(df.index)].empty, 'Index is missing data! {}'.format(
@@ -196,7 +197,7 @@ def construct_databases(years, datasets,
 
 EXTERNAL_TFLOWS_MAP = {'SCH - HQ - NY': 'HQ CHATEAUGUAY',
                        'SCH - HQ_CEDARS': 'HQ CEDARS',
-                       'SCH - HQ_IMPORT_EXPORT': 'SCH - HQ_IMPORT_EXPORT', #subset of HQ Chateauguay 
+                       'SCH - HQ_IMPORT_EXPORT': 'SCH - HQ IMPORT EXPORT', #subset of HQ Chateauguay 
                        'SCH - NE - NY': 'NPX NEW ENGLAND (NE)',
                        'SCH - NPX_1385':'NPX 1385 NORTHPORT (NNC)',
                        'SCH - NPX_CSC': 'NPX CROSS SOUND CABLE (CSC)',
@@ -210,9 +211,3 @@ SUPPORTED_DATASETS = ['load_h', 'load_5m', 'load_forecast_h',
                       'interface_flows_5m', 'fuel_mix_5m',
                       'lbmp_dam_h', 'lbmp_rt_5m',
                       'asp_dam', 'asp_rt']
-
-if __name__ == '__main__':
-    years = ['2019']
-    datasets = SUPPORTED_DATASETS
-    construct_databases(years=years, datasets=datasets,
-                        redownload=False, reconstruct=False, create_csv=False)

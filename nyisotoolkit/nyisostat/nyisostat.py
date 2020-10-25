@@ -4,9 +4,12 @@ from nyisotoolkit.nyisodata.nyisodata import NYISOData
 
 
 class NYISOStat:
+    """A class which summarizes data from the NYISOData
+    
+    """
     #general
     @staticmethod
-    def table_hourly_dataset(dataset,year):
+    def table_hourly_dataset(dataset, year):
         df = NYISOData(dataset=dataset,year=year).df.tz_convert('US/Eastern') #MW
         df = (df * 1/12).resample('H').sum()/1000  #MW->MWh->GWh
         return df
@@ -37,7 +40,7 @@ class NYISOStat:
         load = NYISOData(dataset='load_5m',year=year).df.tz_convert('US/Eastern')['NYCA']
         fuel_mix = NYISOData(dataset='fuel_mix_5m',year=year).df.tz_convert('US/Eastern')
         imports = NYISOData(dataset='interface_flows_5m', year='2019').df.tz_convert('US/Eastern')
-        imports.drop(('External Flows', 'SCH - HQ_IMPORT_EXPORT', 'Flow (MW)'), axis='columns', inplace=True) #HQ Net is a subset of another external flow
+        imports.drop(('External Flows', 'SCH - HQ IMPORT EXPORT', 'Flow (MW)'), axis='columns', inplace=True) #HQ Net is a subset of another external flow
         imports = imports.loc[:,('External Flows',slice(None),'Flow (MW)')]
     
         #Energy Converstion [MWh] and Resampling By Summing Energy
