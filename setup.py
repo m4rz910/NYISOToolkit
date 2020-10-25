@@ -5,7 +5,7 @@ README = pl.Path('.','README.md').read_text()
 
 setuptools.setup(
     name="nyisotoolkit",
-    version="1.0.0",
+    version="2.0.0",
     
     description="A collection of modules for accessing power system data, generating statistics, and creating visualizations from the New York Independent System Operator (NYISO).",
     long_description=README,
