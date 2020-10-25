@@ -17,8 +17,11 @@ There are three kinds of visualizations currently supported - check them all out
 ### Usage Example
 ```python
 from nyisotoolkit import NYISOData, NYISOStat, NYISOVis
-NYISOVis.fig_clcpa_carbon_free(year='2019', f='D')  # daily (D) or monthy (M) frequency is recommended
-#figures saved in nyisotoolkit/nyisovis/visualization folder by default
+nv = NYISOVis(year='2019') #figures saved in nyisotoolkit/nyisovis/visualization folder by default.  
+nv.fig_clcpa_carbon_free(f='D')  # daily (D) or monthy (M) frequency is recommended
+
+#If you want to save to a particular directory, then add the parameter out_dir to the NYISOVis object initialization.
+#It is recommended that you use the pathlib library to create the path.
 
 ```
 ![CLCPA](nyisotoolkit/nyisovis/visualizations/2019_clcpa_carbon_free_D.png)
