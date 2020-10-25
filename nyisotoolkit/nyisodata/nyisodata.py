@@ -20,7 +20,7 @@ class NYISOData:
     df: Dataframe
         Dataframe containing NYISO data post-processed ready for use
     dataset: str
-        Name of a supported dataset found in 'dataset_url_map.yml'
+        Name of a supported dataset found in 'nyisodata/dataset_url_map.yml'
     year: str
         Dataset year in Eastern Standard Time
     redownload: bool, optional

@@ -146,7 +146,7 @@ class NYISOVis:
         #Save and show
         file = pl.Path(self.out_dir, f'{self.year}_energy_{f}.svg')
         fig.savefig(file, bbox_inches='tight', transparent=True)
-        fig.show()
+        # fig.show()
 
     @staticmethod
     def tables_clcpa_carbon_free(year, f='D'):
@@ -224,11 +224,11 @@ class NYISOVis:
         #Save and show
         file = pl.Path(self.out_dir, f'{self.year}_clcpa_carbon_free_{f}.svg')
         fig.savefig(file, bbox_inches='tight', transparent=True)
-        fig.show()
+        # fig.show()
             
     def fig_carbon_free_year(self):
         """Produces a stacked bar chart of annual percent carbon-free by energy source"""
-        stats = NYISOStat.table_annual_energy(year=self.year)
+        stats = NYISOStat(year=self.year).table_annual_energy()
         df = stats[f'Historic ({self.year}) [% of Load]'].drop(index=['Total Renewable Generation',
                                                                  'Total Carbon-Free Generation',
                                                                  'Total Generation',
@@ -265,7 +265,7 @@ class NYISOVis:
         plt.xticks([])
         file = pl.Path(self.out_dir,f'{self.year}_carbon_free_year.svg')
         fig.savefig(file, bbox_inches='tight', transparent=True)
-        fig.show()
+        # fig.show()
 
     def fig_carbon_free_years():
         """Todo: stacked area chart over time using nyisostat annual summary"""

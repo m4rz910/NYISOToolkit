@@ -8,3 +8,5 @@ if __name__ == "__main__":
         for f in ['D','M']:
             nv.fig_energy(f=f)
             nv.fig_clcpa_carbon_free(f=f)
+            
+    print(f"Figures saved by default to: {nv.out_dir} \nYou can change this by passing a pathlib object to the out_dir parameter to the NYISOVis object initialization.")
