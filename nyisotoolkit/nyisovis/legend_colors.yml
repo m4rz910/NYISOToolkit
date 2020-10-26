@@ -1,45 +1,39 @@
 
 #Legend
-legend_colors: 
+legend_colors:
     'Fossil-Fuel': 'black'
     'Coal': 'black' #nrel
     'Oil': 'black'
     'Petroleum': 'black'
     'Other Fossil Fuels': 'black' #nyiso
-    
+
     'Gas': '#a67b55' #nrel
     'Natural Gas': '#a67b55' # nrel light brown
     'Dual Fuel': '#744b27' #nrel dark brown
     'Other Gas': 'orange'
-    
+
     'Carbon-free (Non-renewable)': '#a74038'
     'Nuclear': '#a74038' #nrel
-    
+
     'Geo/Bio': '#74e427' #nrel
     'Geothermal': '#74e427'
     'Biopower': '#74e427'
-    
+
     'Imports': '#878787' #nrel
     'Net Imports': '#878787'
-    
+
     'Carbon-free (Renewable)': 'limegreen'
     'Solar': '#ebc054' #nrel
     'Other Renewables': '#ebc054'
     'Other renewables': '#ebc054'
-    
+
     'Wind': '#49ace2' #nrel
-    
+
     'Hydro': '#486ead' #nrel
     'Hydropower': '#486ead'
-    
+
     'Storage': '#c0c5c9'
     'Hydro Pumped Storage': '#c0c5c9'
-    
+
     'Other': '#333333'
     'All Other': '#333333'
-
-
-
-
-
-
