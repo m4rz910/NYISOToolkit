@@ -147,7 +147,6 @@ class NYISOVis:
                 c='black', fontsize='4', fontstyle= 'italic', horizontalalignment='center',
                 alpha=0.6, transform=ax.transAxes)
         
-                
         #Save and show
         file = pl.Path(self.out_dir, f'{self.year}_energy_{f}.png')
         fig.savefig(file, bbox_inches='tight', transparent=True)
@@ -254,13 +253,13 @@ class NYISOVis:
         perc = stats[f'Historic ({self.year}) [% of Load]'].loc['Total Carbon-Free Generation']
         ax.axhline(y=perc, color='k', linestyle='dashed', linewidth=1,
                     label='Carbon-Free Generation')
-        ax.text(-0.575, perc,'{:.0f}'.format(perc))
+        ax.text(-0.61, perc,'{:.0f}'.format(perc))
         # Carbon Free + Imports Line
         perc = stats[f'Historic ({self.year}) [% of Load]'].loc[['Total Carbon-Free Generation',
                                                             'Imports']].sum()
         ax.axhline(y=perc, color='k', linestyle='dotted', linewidth=1,
                    label='Carbon-Free Generation + Imports')
-        ax.text(-0.575, perc,'{:.0f}'.format(perc))
+        ax.text(-0.61, perc,'{:.0f}'.format(perc))
         # NYISOToolkit label and source
         ax.text(1.6, 0, 'NYISOToolkit (Datasource: NYISO OASIS)',
                 c='black', fontsize='4', fontstyle= 'italic', horizontalalignment='center',
