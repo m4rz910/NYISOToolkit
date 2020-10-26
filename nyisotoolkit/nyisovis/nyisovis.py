@@ -8,18 +8,14 @@ from nyisotoolkit.nyisodata.nyisodata import NYISOData
 from nyisotoolkit.nyisostat.nyisostat import NYISOStat
 
 # Figure Configuration
-plt.style.use(["seaborn-whitegrid"])
-plt.rcParams.update(
-    {
-        "font.weight": "bold",
-        "font.size": 12,
-        "axes.labelweight": "bold",
-        "lines.linewidth": 2,
-        "axes.titleweight": "bold",
-        "axes.grid": True,
-        "axes.edgecolor": ".15",
-    }
-)
+plt.style.use(['seaborn-whitegrid'])
+plt.rcParams.update({'font.weight': 'bold',
+                     'font.size': 8,
+                     'axes.labelweight': 'bold',
+                     'lines.linewidth': 2,
+                     'axes.titleweight': 'bold',
+                     'axes.grid': True,
+                     'axes.edgecolor': '.15'})
 
 # Legend Colors
 c_dir = pl.Path(__file__).resolve().parent
@@ -149,29 +145,18 @@ class NYISOVis:
             Frequency of graph to generate (daily ('D') and monthly ('M') recommended)
         """
 
-        tables = self.tables_energy(year=self.year, f=f)  # Data
-        # Plots
-        fig, ax = plt.subplots(figsize=(10, 5), dpi=300)
-        tables["fuel_mix"].plot.area(
-            ax=ax,
-            color=[LEGEND_DEETS.get(x, "#333333") for x in tables["fuel_mix"].columns],
-            alpha=0.9,
-            lw=0,
-        )  # fuel mix
-        tables["load"].plot.line(
-            ax=ax, linestyle="dashed", linewidth=1, color="k", label="Load"
-        )  # load line
-
-        ax.legend(
-            loc="upper center",
-            bbox_to_anchor=(0.5, -0.05),
-            ncol=4,
-            fancybox=True,
-            shadow=False,
-        )  # Legend
-        # Axes
-        if f == "M":
-            ylabel = "Energy [TWh]"
+        tables = self.tables_energy(year=self.year, f=f) #Data
+        #Plots
+        fig, ax = plt.subplots(figsize=(6,3), dpi=300)
+        tables['fuel_mix'].plot.area(ax=ax,
+                                  color=[LEGEND_DEETS.get(x, '#333333') for x in tables['fuel_mix'].columns],
+                                  alpha=0.9, lw=0) #fuel mix
+        tables['load'].plot.line(ax=ax, linestyle='dashed', linewidth=1, color='k', label='Load') #load line
+        
+        ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.05), ncol=4, fancybox=True, shadow=False) #Legend
+        #Axes
+        if f == 'M':
+            ylabel = 'Energy [TWh]'
         else:
             ylabel = "Energy [GWh]"
         ax.set(
@@ -185,20 +170,15 @@ class NYISOVis:
         plt.setp(ax.get_xticklabels(), rotation=0, horizontalalignment="center")
         plt.setp(ax.xaxis.get_ticklines() + ax.yaxis.get_ticklines(), markersize=3)
         # NYISOToolkit label and source
-        ax.text(
-            0.91,
-            0.92,
-            "NYISOToolkit\nDatasource: NYISO OASIS",
-            c="black",
-            fontsize="7",
-            horizontalalignment="center",
-            bbox=dict(boxstyle="round", ec="black", fc="lightgray", alpha=0.9),
-            transform=ax.transAxes,
-        )
 
-        # Save and show
-        file = pl.Path(self.out_dir, f"{self.year}_energy_{f}.svg")
-        fig.savefig(file, bbox_inches="tight", transparent=True)
+        ax.text(0.875, 0.015, 'NYISOToolkit (Datasource: NYISO OASIS)',
+                c='black', fontsize='4', fontstyle= 'italic', horizontalalignment='center',
+                alpha=0.6, transform=ax.transAxes)
+        
+        #Save and show
+        file = pl.Path(self.out_dir, f'{self.year}_energy_{f}.png')
+        fig.savefig(file, bbox_inches='tight', transparent=True)
+
         # fig.show()
 
     @staticmethod
@@ -238,31 +218,28 @@ class NYISOVis:
             Frequency of graph to generate (daily ('D') and monthly ('M') recommended)
 
         """
-        tables = self.tables_clcpa_carbon_free(year=self.year, f=f)  # Data
 
-        # Plot Carbon-free Fraction
-        fig, ax = plt.subplots(figsize=(10, 5), dpi=300)
-        tables["df"].plot.area(
-            ax=ax,
-            color=[LEGEND_DEETS.get(x, "#333333") for x in tables["df"].columns],
-            alpha=0.9,
-            lw=0,
-        )
+        tables = self.tables_clcpa_carbon_free(year=self.year, f=f) # Data
+        
+        #Plot Carbon-free Fraction
+        fig, ax = plt.subplots(figsize=(6,3), dpi=300)
+        tables['df'].plot.area(ax=ax,
+                            color=[LEGEND_DEETS.get(x, '#333333') for x in tables['df'].columns],
+                            alpha=0.9, lw=0)
+       
+        #Plot Import Line
+        gen_imp = tables['ef'][CARBONFREE_SOURCES+['Imports']].sum(axis='columns')
+        gen_imp.index = gen_imp.index.astype('O')
+        gen_imp.plot.line(ax=ax,linestyle='dotted',
+                          linewidth=1, color='k', label='Total + Imports')
+    
+        #Plot Goals and Progress
+        data = [[t for t in CARBONFREE_SOURCES if t!='Nuclear'],
+                CARBONFREE_SOURCES]
+        averages = ['Renewable: {:.0f}% + Imports: {:.0f}% (70% by 2030)',
+                    'Carbon-Free: {:.0f}% + Imports: {:.0f}% (100% by 2040)']
+        colors = ['limegreen','lawngreen']
 
-        # Plot Import Line
-        gen_imp = tables["ef"][CARBONFREE_SOURCES + ["Imports"]].sum(axis="columns")
-        gen_imp.index = gen_imp.index.astype("O")
-        gen_imp.plot.line(
-            ax=ax, linestyle="dotted", linewidth=1, color="k", label="Total + Imports"
-        )
-
-        # Plot Goals and Progress
-        data = [[t for t in CARBONFREE_SOURCES if t != "Nuclear"], CARBONFREE_SOURCES]
-        averages = [
-            "Renewable: {:.0f}% + Imports: {:.0f}% (70% by 2030)",
-            "Carbon-Free: {:.0f}% + Imports: {:.0f}% (100% by 2040)",
-        ]
-        colors = ["limegreen", "lawngreen"]
         h_distances = [0.05, 0.05]
         for t, l, c, h in zip(data, averages, colors, h_distances):
             avg = (
@@ -284,40 +261,26 @@ class NYISOVis:
                 transform=ax.transAxes,
             )
         # NYISOToolkit label and source
-        ax.text(
-            0.91,
-            0.92,
-            "NYISOToolkit\nDatasource: NYISO OASIS",
-            c="black",
-            fontsize="7",
-            horizontalalignment="center",
-            bbox=dict(boxstyle="round", ec="black", fc="lightgray", alpha=0.9),
-            transform=ax.transAxes,
-        )
 
-        # Legend
-        ax.legend(
-            loc="upper center",
-            bbox_to_anchor=(0.45, -0.05),
-            ncol=5,
-            fancybox=True,
-            shadow=False,
-        )
-        # Axes
-        ax.set(
-            title=f"Historic ({self.year})",
-            xlabel=None,
-            ylabel="Percent of Load Served by Carbon-Free Energy",
-            xlim=[tables["df"].index[0], tables["df"].index[-1]],
-            ylim=[0, 100],
-        )
-        ax.xaxis.set_major_formatter(mdates.DateFormatter("%b"))
-        plt.setp(ax.get_xticklabels(), rotation=0, horizontalalignment="center")
+        ax.text(0.875, 0.015, 'NYISOToolkit (Datasource: NYISO OASIS)',
+                c='black', fontsize='4', fontstyle= 'italic', horizontalalignment='center',
+                alpha=0.6, transform=ax.transAxes)
+            
+        #Legend
+        ax.legend(loc='upper center',bbox_to_anchor=(0.45, -0.05),
+                  ncol=5, fancybox=True, shadow=False)
+        #Axes
+        ax.set(title=f'Historic ({self.year})',
+               xlabel=None, ylabel='% of Demand Served by Carbon-Free Energy',
+               xlim=[tables['df'].index[0], tables['df'].index[-1]], ylim=[0, 100])
+        ax.xaxis.set_major_formatter(mdates.DateFormatter('%b'))
+        plt.setp(ax.get_xticklabels(), rotation=0, horizontalalignment='center')
         plt.setp(ax.xaxis.get_ticklines() + ax.yaxis.get_ticklines(), markersize=3)
+        
+        #Save and show
+        file = pl.Path(self.out_dir, f'{self.year}_clcpa_carbon_free_{f}.png')
+        fig.savefig(file, bbox_inches='tight', transparent=True)
 
-        # Save and show
-        file = pl.Path(self.out_dir, f"{self.year}_clcpa_carbon_free_{f}.svg")
-        fig.savefig(file, bbox_inches="tight", transparent=True)
         # fig.show()
 
     def fig_carbon_free_year(self):
@@ -333,74 +296,45 @@ class NYISOVis:
             ]
         )
         df = df.to_frame().T
-        # Plot
-        fig, ax = plt.subplots(figsize=(4, 8), dpi=300)
-        df.plot.bar(
-            stacked=True,
-            ax=ax,
-            color=[LEGEND_DEETS.get(x, "#333333") for x in df.columns],
-            alpha=0.9,
-        )
-        # Averages and Goals
+
+        #Plot
+        fig, ax = plt.subplots(figsize=(2,4), dpi=300)
+        df.plot.bar(stacked=True, ax=ax,
+                    color=[LEGEND_DEETS.get(x, '#333333') for x in df.columns],
+                    alpha=0.9)
+        #Averages and Goals
         # Carbon Free Line
-        perc = stats[f"Historic ({self.year}) [% of Load]"].loc[
-            "Total Carbon-Free Generation"
-        ]
-        ax.axhline(
-            y=perc, color="k", linestyle="dashed", label="Carbon-Free Generation"
-        )
-        ax.text(-0.575, perc, "{:.0f}".format(perc))
+        perc = stats[f'Historic ({self.year}) [% of Load]'].loc['Total Carbon-Free Generation']
+        ax.axhline(y=perc, color='k', linestyle='dashed', linewidth=1,
+                    label='Carbon-Free Generation')
+        ax.text(-0.61, perc,'{:.0f}'.format(perc))
         # Carbon Free + Imports Line
-        perc = (
-            stats[f"Historic ({self.year}) [% of Load]"]
-            .loc[["Total Carbon-Free Generation", "Imports"]]
-            .sum()
-        )
-        ax.axhline(
-            y=perc,
-            color="k",
-            linestyle="dotted",
-            label="Carbon-Free Generation + Imports",
-        )
-        ax.text(-0.575, perc, "{:.0f}".format(perc))
+        perc = stats[f'Historic ({self.year}) [% of Load]'].loc[['Total Carbon-Free Generation',
+                                                            'Imports']].sum()
+        ax.axhline(y=perc, color='k', linestyle='dotted', linewidth=1,
+                   label='Carbon-Free Generation + Imports')
+        ax.text(-0.61, perc,'{:.0f}'.format(perc))
         # NYISOToolkit label and source
-        ax.text(
-            1.5,
-            0.8,
-            "NYISOToolkit\nDatasource: NYISO OASIS",
-            c="black",
-            fontsize="8",
-            horizontalalignment="center",
-            bbox=dict(boxstyle="round", ec="black", fc="lightgray", alpha=0.9),
-            transform=ax.transAxes,
-        )
-
-        # Legend
+        ax.text(1.6, 0, 'NYISOToolkit (Datasource: NYISO OASIS)',
+                c='black', fontsize='4', fontstyle= 'italic', horizontalalignment='center',
+                alpha=0.6, transform=ax.transAxes)
+        
+        #Legend
         handles, labels = ax.get_legend_handles_labels()
-        ax.legend(
-            reversed(handles),
-            reversed(labels),
-            loc="right",
-            bbox_to_anchor=(2.2, 0.5),
-            ncol=1,
-            fancybox=True,
-            shadow=False,
-        )
-        # Axes
-        ax.set(
-            title=f"Historic ({self.year})",
-            xlabel=self.year,
-            ylabel="Percent of Load Served by Carbon-Free Energy",
-            xlim=None,
-            ylim=None,
-        )
+        ax.legend(reversed(handles), reversed(labels),
+                  loc='right', bbox_to_anchor=(2.5, 0.5),
+                  ncol=1, fancybox=True, shadow=False)
+        #Axes
+        ax.set(title=f'Historic ({self.year})',
+               xlabel=self.year, ylabel='% of Demand Served by Carbon-Free Energy',
+               xlim=None, ylim=None)
         plt.xticks([])
-
-        # Save
-        file = pl.Path(self.out_dir, f"{self.year}_carbon_free_year.svg")
-        fig.savefig(file, bbox_inches="tight", transparent=True)
-        # fig.show()
-
+        
+        #Save
+        file = pl.Path(self.out_dir,f'{self.year}_carbon_free_year.png')
+        fig.savefig(file, bbox_inches='tight', transparent=True)
+        # fig.show()        
+        
     def fig_carbon_free_years():
         """Todo: stacked area chart over time using nyisostat annual summary"""
         return

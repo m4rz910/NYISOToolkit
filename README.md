@@ -31,8 +31,8 @@ print(f"Figures saved by default to: {nv.out_dir} \nYou can change this by passi
 
 ```
 
-![CLCPA](nyisotoolkit/nyisovis/visualizations/2019_clcpa_carbon_free_D.svg)
-
+![CLCPA](nyisotoolkit/nyisovis/visualizations/2019_clcpa_carbon_free_D.png)
+ 
 ## NYISOData
 
 Raw Data Source: <http://mis.nyiso.com/public/>
