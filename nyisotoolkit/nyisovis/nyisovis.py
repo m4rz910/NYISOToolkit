@@ -149,7 +149,7 @@ class NYISOVis:
                 transform=ax.transAxes)
                 
         #Save and show
-        file = pl.Path(self.out_dir, f'{self.year}_energy_{f}.svg')
+        file = pl.Path(self.out_dir, f'{self.year}_energy_{f}.png')
         fig.savefig(file, bbox_inches='tight', transparent=True)
         # fig.show()
 
@@ -232,7 +232,7 @@ class NYISOVis:
         plt.setp(ax.xaxis.get_ticklines() + ax.yaxis.get_ticklines(), markersize=3)
         
         #Save and show
-        file = pl.Path(self.out_dir, f'{self.year}_clcpa_carbon_free_{f}.svg')
+        file = pl.Path(self.out_dir, f'{self.year}_clcpa_carbon_free_{f}.png')
         fig.savefig(file, bbox_inches='tight', transparent=True)
         # fig.show()
             
@@ -280,7 +280,7 @@ class NYISOVis:
         plt.xticks([])
         
         #Save
-        file = pl.Path(self.out_dir,f'{self.year}_carbon_free_year.svg')
+        file = pl.Path(self.out_dir,f'{self.year}_carbon_free_year.png')
         fig.savefig(file, bbox_inches='tight', transparent=True)
         # fig.show()        
         
