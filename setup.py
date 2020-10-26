@@ -18,7 +18,6 @@ setuptools.setup(
         "Operating System :: OS Independent",
     ],
     packages=setuptools.find_packages(),
-    package_data={"": ["*.yml"]},
     install_requires=[
         "pandas>=1.0.5",
         "matplotlib>=3.2.2",
