@@ -19,7 +19,7 @@ There are three kinds of visualizations currently supported - check them all out
 from nyisotoolkit import NYISOData, NYISOStat, NYISOVis
 nv = NYISOVis(year='2019') #figures saved in nyisotoolkit/nyisovis/visualization folder by default.  
 nv.fig_clcpa_carbon_free(f='D')  # daily (D) or monthy (M) frequency is recommended
-print(f"Figures saved by default to: {nv.out_dir} \nYou can change this by passing a pathlib object to the out_dir parameter to the NYISOVis object initialization.")
+print(f"Figures saved by default to: {nv.out_dir} \nYou can change this by passing a pathlib object to the out_dir parameter in the NYISOVis object initialization.")
 
 ```
 ![CLCPA](nyisotoolkit/nyisovis/visualizations/2019_clcpa_carbon_free_D.png)
