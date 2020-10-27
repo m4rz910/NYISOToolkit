@@ -34,7 +34,7 @@ Datasets Currently Supported:
 - fuel_mix_5m (5-min frequency)
 - interface_flows_5m (5-min internal and external flows between regions)
 - lbmp_dam_h (hourly day-ahead zonal location based marginal price)
-- lbmp_rt_5m (5-min reak time zonal location based marginal price)
+- lbmp_rt_5m (5-min real time zonal location based marginal price)
 - asp_rt (5-min real time zonal ancillary service prices)
 - asp_dam (hourly day-ahead zonal ancillary service prices)
 
