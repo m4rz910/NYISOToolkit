@@ -116,7 +116,7 @@ class NYISOStat:
         fuel_mix = fuel_mix.rename(columns={0:f'Historic ({self.year})'}).sort_values(f'Historic ({self.year})', ascending=False)
         
         #reorder carbon free resources first
-        carbon_free_resources = ['Nuclear','Hydro','Other Renewables','Wind']
+        carbon_free_resources = ['Hydro','Wind','Other Renewables','Nuclear']
         df = fuel_mix.loc[carbon_free_resources]
         df = pd.concat([df, fuel_mix.loc[[ind for ind in fuel_mix.index if ind not in carbon_free_resources]]])
         

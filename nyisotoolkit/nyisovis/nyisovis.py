@@ -244,32 +244,47 @@ class NYISOVis:
                                                                  'Load'])
         df = df.to_frame().T
         #Plot
-        fig, ax = plt.subplots(figsize=(2,4), dpi=300)
+        fig, ax = plt.subplots(figsize=(3,6), dpi=300)
         df.plot.bar(stacked=True, ax=ax,
                     color=[LEGEND_DEETS.get(x, '#333333') for x in df.columns],
                     alpha=0.9)
-        #Averages and Goals
-        # Carbon Free Line
-        perc = stats[f'Historic ({self.year}) [% of Load]'].loc['Total Carbon-Free Generation']
-        ax.axhline(y=perc, color='k', linestyle='dashed', linewidth=1,
-                    label='Carbon-Free Generation')
-        ax.text(-0.61, perc,'{:.0f}'.format(perc))
-        # Carbon Free + Imports Line
-        perc = stats[f'Historic ({self.year}) [% of Load]'].loc[['Total Carbon-Free Generation',
-                                                            'Imports']].sum()
-        ax.axhline(y=perc, color='k', linestyle='dotted', linewidth=1,
-                   label='Carbon-Free Generation + Imports')
-        ax.text(-0.61, perc,'{:.0f}'.format(perc))
+            
+        # Renewable and Carbon Free lines with imports
+        bar_left_edge=0.25
+        bar_right_edge=0.75
+        text_down_shift=0.9
+        text_left_shift=0.08
+        text_right_shift=0.03
+        scatter_left= 0.27
+        for quantity, c in zip(['Total Renewable Generation', 'Total Carbon-Free Generation'],
+                               ['limegreen', 'lawngreen']):
+            perc = stats[f'Historic ({self.year}) [% of Load]'].loc[quantity]
+            ax.axhline(y=perc, xmin=bar_left_edge, xmax=bar_right_edge,
+                       color=c, linestyle='dashed', linewidth=1, label=f'{quantity}')
+            ax.text(-scatter_left-text_left_shift, perc-text_down_shift,'{:.0f}'.format(perc))
+            ax.scatter(-scatter_left, perc, marker='>', color=c, alpha=1)
+            
+            # With Imports Line
+            perc = stats[f'Historic ({self.year}) [% of Load]'].loc[[quantity,'Imports']].sum()
+            ax.axhline(y=perc, xmin=bar_left_edge, xmax=bar_right_edge,
+                       color=c, linestyle='dotted', linewidth=1, label=f'{quantity} + Imports')
+            ax.text(scatter_left+text_right_shift, perc-text_down_shift,'{:.0f}'.format(perc))
+            ax.scatter(scatter_left, perc, marker='<', color=c, alpha=1)
+        
         # NYISOToolkit label and source
-        ax.text(1.6, 0, 'NYISOToolkit (Datasource: NYISO OASIS)',
+        ax.text(1.3, 0, 'NYISOToolkit (Datasource: NYISO OASIS)',
                 c='black', fontsize='4', fontstyle= 'italic', horizontalalignment='center',
                 alpha=0.6, transform=ax.transAxes)
         
         #Legend
+        def remove_text(x):
+            return x.replace('Total','').replace('Generation','')
         handles, labels = ax.get_legend_handles_labels()
+        labels = [remove_text(l) for l in labels]
         ax.legend(reversed(handles), reversed(labels),
-                  loc='right', bbox_to_anchor=(2.5, 0.5),
+                  loc='right', bbox_to_anchor=(2, 0.5),
                   ncol=1, fancybox=True, shadow=False)
+        
         #Axes
         ax.set(title=f'Historic ({self.year})',
                xlabel=self.year, ylabel='% of Demand Served by Carbon-Free Energy',
