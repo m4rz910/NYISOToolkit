@@ -22,7 +22,7 @@ nv.fig_clcpa_carbon_free(f='D')  # daily (D) or monthy (M) frequency is recommen
 print(f"Figures saved by default to: {nv.out_dir} \nYou can change this by passing a pathlib object to the out_dir parameter in the NYISOVis object initialization.")
 
 ```
-![CLCPA](nyisotoolkit/nyisovis/visualizations/2019_clcpa_carbon_free_D.png)
+![CLCPA](nyisotoolkit/nyisovis/visualizations/2019_carbon_free_timeseries_D.png)
  
 ## NYISOData
 Raw Data Source: http://mis.nyiso.com/public/

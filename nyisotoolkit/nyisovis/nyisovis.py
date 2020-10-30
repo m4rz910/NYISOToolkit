@@ -1,8 +1,10 @@
 import pathlib as pl
-
 import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
+import matplotlib
+import seaborn as sns
 import yaml
+import pandas as pd
 
 from nyisotoolkit.nyisodata.nyisodata import NYISOData
 from nyisotoolkit.nyisostat.nyisostat import NYISOStat
@@ -63,7 +65,7 @@ class NYISOVis:
         self.out_dir = out_dir
 
     @staticmethod
-    def tables_energy(year, f='D'):
+    def tables_energy_generation(year, f='D'):
         """Gathers datasets needed to produce fig_energy
         
         Parameters
@@ -112,7 +114,7 @@ class NYISOVis:
         tables = {k: month_adj_object(v) for k, v in tables.items()}
         return tables
         
-    def fig_energy(self, f):
+    def fig_energy_generation(self, f):
         """Produces a stacked area chart showing the trend of energy generation by energy source from tables_energy
         
         Parameters
@@ -121,7 +123,7 @@ class NYISOVis:
             Frequency of graph to generate (daily ('D') and monthly ('M') recommended)
         """
         
-        tables = self.tables_energy(year=self.year, f=f) #Data
+        tables = self.tables_energy_generation(year=self.year, f=f) #Data
         #Plots
         fig, ax = plt.subplots(figsize=(6,3), dpi=300)
         tables['fuel_mix'].plot.area(ax=ax,
@@ -135,7 +137,7 @@ class NYISOVis:
             ylabel = 'Energy [TWh]'
         else:
             ylabel = 'Energy [GWh]'
-        ax.set(title=f'Historic ({self.year})',
+        ax.set(title=f'Energy Generation ({self.year})',
                xlabel=None, ylabel=ylabel,
                xlim=[tables['fuel_mix'].index[0], tables['fuel_mix'].index[-1]],
                ylim=None)
@@ -148,13 +150,13 @@ class NYISOVis:
                 alpha=0.6, transform=ax.transAxes)
         
         #Save and show
-        file = pl.Path(self.out_dir, f'{self.year}_energy_{f}.png')
+        file = pl.Path(self.out_dir, f'{self.year}_energy_generation_{f}.png')
         fig.savefig(file, bbox_inches='tight', transparent=True)
         # fig.show()
 
     @staticmethod
-    def tables_clcpa_carbon_free(year, f='D'):
-        """Gathers datasets needed to produce fig_clcpa_carbon_free
+    def tables_carbon_free_timeseries(year, f='D'):
+        """Gathers datasets needed to produce fig_carbon_free_timeseries
         
         Parameters
         ----------
@@ -167,15 +169,15 @@ class NYISOVis:
             Dictionary containing dataset names as keys and respective Dataframes
         """
         
-        tables = NYISOVis.tables_energy(year=year, f=f)
+        tables = NYISOVis.tables_energy_generation(year=year, f=f)
         #Calculating Carbon-free Fraction [%]
         tables['ef'] = tables['fuel_mix'].div(tables['load'], axis='index') * 100
         tables['ef']['percent_carbon_free'] = tables['ef'][CARBONFREE_SOURCES].sum(axis='columns')
         tables['df'] = tables['ef'][CARBONFREE_SOURCES] #plot only carbon free resources
         return tables
         
-    def fig_clcpa_carbon_free(self, f='D'):
-        """Produces a stacked area chart showing the trend of carbon-free that served load by energy source from tables_clcpa_carbon_free
+    def fig_carbon_free_timeseries(self, f='D'):
+        """Produces a stacked area chart showing the trend of carbon-free that served load by energy source from tables_carbon_free_timeseries. Overlayed on top are the CLCPA targets and the status toward achieving them. 
         
         Figure Inspiration: NYISO Power Trends 2020 - Figure 12: Production of In-State Renewables & Zero-Emission Resources Relative to 2019 Load 
         
@@ -185,7 +187,7 @@ class NYISOVis:
             Frequency of graph to generate (daily ('D') and monthly ('M') recommended)
         
         """
-        tables = self.tables_clcpa_carbon_free(year=self.year, f=f) # Data
+        tables = self.tables_carbon_free_timeseries(year=self.year, f=f) # Data
         
         #Plot Carbon-free Fraction
         fig, ax = plt.subplots(figsize=(6,3), dpi=300)
@@ -222,7 +224,7 @@ class NYISOVis:
         ax.legend(loc='upper center',bbox_to_anchor=(0.45, -0.05),
                   ncol=5, fancybox=True, shadow=False)
         #Axes
-        ax.set(title=f'Historic ({self.year})',
+        ax.set(title=f'Carbon-free Time Series ({self.year})',
                xlabel=None, ylabel='% of Demand Served by Carbon-Free Energy',
                xlim=[tables['df'].index[0], tables['df'].index[-1]], ylim=[0, 100])
         ax.xaxis.set_major_formatter(mdates.DateFormatter('%b'))
@@ -230,7 +232,7 @@ class NYISOVis:
         plt.setp(ax.xaxis.get_ticklines() + ax.yaxis.get_ticklines(), markersize=3)
         
         #Save and show
-        file = pl.Path(self.out_dir, f'{self.year}_clcpa_carbon_free_{f}.png')
+        file = pl.Path(self.out_dir, f'{self.year}_carbon_free_timeseries_{f}.png')
         fig.savefig(file, bbox_inches='tight', transparent=True)
         # fig.show()
             
@@ -294,7 +296,41 @@ class NYISOVis:
         #Save
         file = pl.Path(self.out_dir,f'{self.year}_carbon_free_year.png')
         fig.savefig(file, bbox_inches='tight', transparent=True)
-        # fig.show()        
+        # fig.show()
+        
+    def fig_decarbonization_heatmap(self):
+        tables = self.tables_carbon_free_timeseries(year=self.year, f='H') # Data
+        df = pd.DataFrame(tables['df'].sum(axis='columns')) #sum to get total carbon-free percent
+        df['Date'] = df.index.date
+        df['Hour'] = df.index.hour
+        df = df.pivot_table(index='Hour', columns='Date', values=0) #TODO: Check: duplicate index warning with regular pivot, likely because in EST TIME.
+        
+        fig, ax = plt.subplots(figsize=(6,3), dpi=300)
+        cmap = sns.diverging_palette(15, 150, as_cmap=True)
+        ax = sns.heatmap(df, cmap=cmap, vmin=0, vmax=100, ax=ax,
+                         cbar_kws={'label': '% of Demand Served by Carbon-Free Energy'})
+        
+        #Axes
+        ax.set(title=f'Decarbonization Heat Map ({self.year})',
+               xlabel=None, ylabel=None,
+               xlim=[0,364], ylim=None)
+        #x-axes
+        ax.xaxis.set_major_locator(mdates.MonthLocator())
+        ax.xaxis.set_major_formatter(mdates.DateFormatter('%b'))
+        plt.setp(ax.get_xticklabels(), rotation=0, horizontalalignment='center')
+        #y-axes
+        ax.set_yticks(range(6,24,6))
+        ax.set_yticklabels(['Morning (6AM)', 'Noon (12PM)', 'Evening (6PM)'])
+        plt.setp(ax.get_yticklabels(), rotation=0,
+                 horizontalalignment='right')
+        #both axes
+        plt.setp(ax.xaxis.get_ticklines() + ax.yaxis.get_ticklines(), markersize=3)
+                
+        #Save
+        file = pl.Path(self.out_dir,f'{self.year}_decarbonization_heatmap.png')
+        fig.savefig(file, bbox_inches='tight', transparent=True)
+        
+        
         
     def fig_carbon_free_years():
         """Todo: stacked area chart over time using nyisostat annual summary"""

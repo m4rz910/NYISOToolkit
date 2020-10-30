@@ -63,3 +63,6 @@ docs/_build/
 
 # PyBuilder
 target/
+
+#Visual studio
+.vscode/

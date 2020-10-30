@@ -25,6 +25,7 @@ setuptools.setup(
     },
     install_requires=['pandas>=1.0.5',
                       'matplotlib>=3.2.2',
+                      'seaborn',
                       'pytest>=6.0.1',
                       'pytz>=2020.1',
                       'requests>=2.24.0',
