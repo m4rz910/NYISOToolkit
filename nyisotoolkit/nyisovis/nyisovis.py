@@ -305,8 +305,9 @@ class NYISOVis:
         df['Hour'] = df.index.hour
         df = df.pivot_table(index='Hour', columns='Date', values=0) #TODO: Check: duplicate index warning with regular pivot, likely because in EST TIME.
         
+        #Plot
         fig, ax = plt.subplots(figsize=(6,3), dpi=300)
-        cmap = sns.diverging_palette(15, 150, as_cmap=True)
+        cmap = sns.diverging_palette(15, 240, as_cmap=True)
         ax = sns.heatmap(df, cmap=cmap, vmin=0, vmax=100, ax=ax,
                          cbar_kws={'label': '% of Demand Served by Carbon-Free Energy'})
         
@@ -325,6 +326,11 @@ class NYISOVis:
                  horizontalalignment='right')
         #both axes
         plt.setp(ax.xaxis.get_ticklines() + ax.yaxis.get_ticklines(), markersize=3)
+        
+        # NYISOToolkit label and source
+        ax.text(0.845, 0.015, 'NYISOToolkit (Datasource: NYISO OASIS)',
+                c='black', fontsize='4', fontstyle= 'italic', horizontalalignment='center',
+                alpha=0.6, transform=ax.transAxes)
                 
         #Save
         file = pl.Path(self.out_dir,f'{self.year}_decarbonization_heatmap.png')
