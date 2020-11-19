@@ -52,7 +52,8 @@ class NYISOData:
     """
 
     def __init__(self, dataset, year,
-                 redownload=False, reconstruct=False, create_csv=False):
+                 redownload=False, reconstruct=False,
+                 create_csv=False):
         """Creates a local database based on dataset name and year stored in UTC.
         
         Parameters
@@ -61,6 +62,9 @@ class NYISOData:
             Name of a supported dataset found in 'dataset_url_map.yml' 
         year: str
             Dataset year in Eastern Standard Time
+            
+        TODO: update: bool, optional
+            A flag to stop the automatic downloading of new data from the current year (default is True)
         redownload: bool, optional
             A flag used to redownload CSV files (default is False)
         reconstruct: bool, optional

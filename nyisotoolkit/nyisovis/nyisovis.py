@@ -306,7 +306,6 @@ class NYISOVis:
         #Save
         file = pl.Path(self.out_dir,f'{self.year}_carbon_free_year.png')
         fig.savefig(file, bbox_inches='tight', transparent=True)
-        # fig.show()
         
     def fig_decarbonization_heatmap(self):
         """Creates a figure depicting an overview of the seasonal and daily carbon-free operation.
@@ -350,8 +349,7 @@ class NYISOVis:
         #Save
         file = pl.Path(self.out_dir,f'{self.year}_decarbonization_heatmap.png')
         fig.savefig(file, bbox_inches='tight', transparent=True)
-            
-        
+                
     def fig_carbon_free_years():
         """Todo: stacked area chart over time using nyisostat annual summary"""
         return
