@@ -313,7 +313,7 @@ class NYISOVis:
         
         """
         
-        tables = self.tables_carbon_free_timeseries(year=self.year, f='H') # Data
+        tables = self.tables_carbon_free_timeseries(f='H') # Data
         df = pd.DataFrame(tables['df'].sum(axis='columns')) #sum to get total carbon-free percent
         df['Date'] = df.index.date
         df['Hour'] = df.index.hour
