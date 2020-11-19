@@ -1,10 +1,11 @@
 import pathlib as pl
 import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
-import matplotlib
+from mpl_toolkits.mplot3d import Axes3D
 import seaborn as sns
 import yaml
 import pandas as pd
+import numpy as np
 
 from nyisotoolkit.nyisodata.nyisodata import NYISOData
 from nyisotoolkit.nyisostat.nyisostat import NYISOStat
@@ -42,31 +43,38 @@ class NYISOVis:
         
     Methods
     -------
-    tables_energy
+    tables_energy_generation
         Gathers datasets needed to produce fig_energy
-    fig_energy
+    fig_energy_generation
         Produces a stacked area chart showing the trend of energy generation by energy source from tables_energy
-    tables_clcpa_carbon_free
-        Gathers datasets needed to produce fig_clcpa_carbon_free
-    fig_clcpa_carbon_free
+    tables_carbon_free_timeseries
+        Gathers datasets needed to produce fig_carbon_free_timeseries
+    fig_carbon_free_timeseries
         Produces a stacked area chart showing the trend of carbon-free that served load by energy source from tables_clcpa_carbon_free
     fig_carbon_free_year
         Produces a stacked bar chart of annual percent carbon-free by energy source
+        
+    todo: Add additional functions
     """
     
-    def __init__(self, year='2019', out_dir = pl.Path(c_dir,'visualizations')):
+    def __init__(self, year='2019', out_dir = pl.Path(c_dir,'visualizations'), **kwargs):
         """
         Parameters
         ----------
         year: str, int
             Year of dataset(s) to use for graphs
+        out_dir: Pathlib Object
+            Directory to save the figure to
+        kwargs:
+            Additional parameters to be passed to NYISOData intialization
         """
+        
         self.year = year
         self.out_dir = out_dir
+        self.kwargs = kwargs
 
-    @staticmethod
-    def tables_energy_generation(year, f='D'):
-        """Gathers datasets needed to produce fig_energy
+    def tables_energy_generation(self, f='D'):
+        """Gathers datasets (in US/Eastern) needed to produce a few figures.
         
         Parameters
         ----------
@@ -83,9 +91,12 @@ class NYISOVis:
             raise ValueError('Frequency Not Supported!')
         
         #Power [MW]
-        load = NYISOData(dataset='load_5m', year=year).df.tz_convert('US/Eastern')['NYCA']
-        fuel_mix = NYISOData(dataset='fuel_mix_5m', year=year).df.tz_convert('US/Eastern')
-        imports = NYISOData(dataset='interface_flows_5m', year=year).df.tz_convert('US/Eastern')
+        load = NYISOData(dataset='load_5m', year=self.year,
+                         **self.kwargs).df.tz_convert('US/Eastern')['NYCA']
+        fuel_mix = NYISOData(dataset='fuel_mix_5m', year=self.year,
+                             **self.kwargs).df.tz_convert('US/Eastern')
+        imports = NYISOData(dataset='interface_flows_5m', year=self.year,
+                            **self.kwargs).df.tz_convert('US/Eastern')
         imports = imports.loc[:, ('External Flows', slice(None), 'Flow (MW)')]
         imports.drop(('External Flows', 'SCH - HQ IMPORT EXPORT', 'Flow (MW)'),
                      axis='columns', inplace=True) #'SCH - HQ IMPORT EXPORT' is a subset of another external flow
@@ -114,7 +125,7 @@ class NYISOVis:
         tables = {k: month_adj_object(v) for k, v in tables.items()}
         return tables
         
-    def fig_energy_generation(self, f):
+    def fig_energy_generation(self, f='D'):
         """Produces a stacked area chart showing the trend of energy generation by energy source from tables_energy
         
         Parameters
@@ -123,7 +134,7 @@ class NYISOVis:
             Frequency of graph to generate (daily ('D') and monthly ('M') recommended)
         """
         
-        tables = self.tables_energy_generation(year=self.year, f=f) #Data
+        tables = self.tables_energy_generation(f=f) #Data
         #Plots
         fig, ax = plt.subplots(figsize=(6,3), dpi=300)
         tables['fuel_mix'].plot.area(ax=ax,
@@ -149,13 +160,12 @@ class NYISOVis:
                 c='black', fontsize='4', fontstyle= 'italic', horizontalalignment='center',
                 alpha=0.6, transform=ax.transAxes)
         
-        #Save and show
+        #Save
         file = pl.Path(self.out_dir, f'{self.year}_energy_generation_{f}.png')
         fig.savefig(file, bbox_inches='tight', transparent=True)
-        # fig.show()
 
-    @staticmethod
-    def tables_carbon_free_timeseries(year, f='D'):
+
+    def tables_carbon_free_timeseries(self, f='D'):
         """Gathers datasets needed to produce fig_carbon_free_timeseries
         
         Parameters
@@ -169,7 +179,7 @@ class NYISOVis:
             Dictionary containing dataset names as keys and respective Dataframes
         """
         
-        tables = NYISOVis.tables_energy_generation(year=year, f=f)
+        tables = self.tables_energy_generation(f=f)
         #Calculating Carbon-free Fraction [%]
         tables['ef'] = tables['fuel_mix'].div(tables['load'], axis='index') * 100
         tables['ef']['percent_carbon_free'] = tables['ef'][CARBONFREE_SOURCES].sum(axis='columns')
@@ -187,7 +197,7 @@ class NYISOVis:
             Frequency of graph to generate (daily ('D') and monthly ('M') recommended)
         
         """
-        tables = self.tables_carbon_free_timeseries(year=self.year, f=f) # Data
+        tables = self.tables_carbon_free_timeseries(f=f) # Data
         
         #Plot Carbon-free Fraction
         fig, ax = plt.subplots(figsize=(6,3), dpi=300)
@@ -231,10 +241,10 @@ class NYISOVis:
         plt.setp(ax.get_xticklabels(), rotation=0, horizontalalignment='center')
         plt.setp(ax.xaxis.get_ticklines() + ax.yaxis.get_ticklines(), markersize=3)
         
-        #Save and show
+        #Save
         file = pl.Path(self.out_dir, f'{self.year}_carbon_free_timeseries_{f}.png')
         fig.savefig(file, bbox_inches='tight', transparent=True)
-        # fig.show()
+        return tables
             
     def fig_carbon_free_year(self):
         """Produces a stacked bar chart of annual percent carbon-free by energy source"""
@@ -299,6 +309,11 @@ class NYISOVis:
         # fig.show()
         
     def fig_decarbonization_heatmap(self):
+        """Creates a figure depicting an overview of the seasonal and daily carbon-free operation.
+        Inspired by: Google ESIG Presentation 10/13/2020
+        
+        """
+        
         tables = self.tables_carbon_free_timeseries(year=self.year, f='H') # Data
         df = pd.DataFrame(tables['df'].sum(axis='columns')) #sum to get total carbon-free percent
         df['Date'] = df.index.date
@@ -307,7 +322,7 @@ class NYISOVis:
         
         #Plot
         fig, ax = plt.subplots(figsize=(6,3), dpi=300)
-        cmap = sns.diverging_palette(15, 240, as_cmap=True)
+        cmap = sns.diverging_palette(2, 145, as_cmap=True)
         ax = sns.heatmap(df, cmap=cmap, vmin=0, vmax=100, ax=ax,
                          cbar_kws={'label': '% of Demand Served by Carbon-Free Energy'})
         
@@ -335,8 +350,7 @@ class NYISOVis:
         #Save
         file = pl.Path(self.out_dir,f'{self.year}_decarbonization_heatmap.png')
         fig.savefig(file, bbox_inches='tight', transparent=True)
-        
-        
+            
         
     def fig_carbon_free_years():
         """Todo: stacked area chart over time using nyisostat annual summary"""
