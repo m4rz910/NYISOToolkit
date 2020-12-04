@@ -7,7 +7,7 @@ import yaml
 import pandas as pd
 import numpy as np
 
-from nyisotoolkit.nyisodata.nyisodata import NYISOData
+from nyisotoolkit.nyisodata.nyisodata import NYISOData, DATABASE_DIR
 from nyisotoolkit.nyisostat.nyisostat import NYISOStat
 
 # Figure Configuration
@@ -71,7 +71,14 @@ class NYISOVis:
         
         self.year = year
         self.out_dir = out_dir
-        self.kwargs = kwargs
+        
+        #if redownload is passed, update existing databases
+        #looks to see which datasets are available and redownloads them
+        if kwargs['redownload'] or kwargs['reconstruct']:
+            existing_dbs = pl.Path(DATABASE_DIR).glob(f"{self.year}*.pkl")
+            existing_datasets = [db.name.replace(".pkl","").replace(f"{self.year}_","") for db in existing_dbs]
+            for dataset in existing_datasets:
+                NYISOData(dataset=dataset, year=self.year, **kwargs)
 
     def tables_energy_generation(self, f='D'):
         """Gathers datasets (in US/Eastern) needed to produce a few figures.
@@ -91,12 +98,9 @@ class NYISOVis:
             raise ValueError('Frequency Not Supported!')
         
         #Power [MW]
-        load = NYISOData(dataset='load_5m', year=self.year,
-                         **self.kwargs).df.tz_convert('US/Eastern')['NYCA']
-        fuel_mix = NYISOData(dataset='fuel_mix_5m', year=self.year,
-                             **self.kwargs).df.tz_convert('US/Eastern')
-        imports = NYISOData(dataset='interface_flows_5m', year=self.year,
-                            **self.kwargs).df.tz_convert('US/Eastern')
+        load = NYISOData(dataset='load_5m', year=self.year).df.tz_convert('US/Eastern')['NYCA']
+        fuel_mix = NYISOData(dataset='fuel_mix_5m', year=self.year).df.tz_convert('US/Eastern')
+        imports = NYISOData(dataset='interface_flows_5m', year=self.year).df.tz_convert('US/Eastern')
         imports = imports.loc[:, ('External Flows', slice(None), 'Flow (MW)')]
         imports.drop(('External Flows', 'SCH - HQ IMPORT EXPORT', 'Flow (MW)'),
                      axis='columns', inplace=True) #'SCH - HQ IMPORT EXPORT' is a subset of another external flow
