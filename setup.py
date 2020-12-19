@@ -18,12 +18,14 @@ setuptools.setup(
         "Operating System :: OS Independent",
     ],
     packages=setuptools.find_packages(),
-    install_requires=[
-        "pandas>=1.0.5",
-        "matplotlib>=3.2.2",
-        "pytest>=6.0.1",
-        "pytz>=2020.1",
-        "requests>=2.24.0",
-        "pyyaml>=5.3.1",
-    ],
+    package_data = {
+        '': ['*.yml']
+    },
+    install_requires=['pandas>=1.0.5',
+                      'matplotlib>=3.2.2',
+                      'seaborn',
+                      'pytest>=6.0.1',
+                      'pytz>=2020.1',
+                      'requests>=2.24.0',
+                      'pyyaml>=5.3.1']
 )

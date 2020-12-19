@@ -11,6 +11,8 @@ from . import utils
 
 # from . import DataQuality
 
+STORAGE_DIR = pl.Path(pl.Path(__file__).resolve().parent, 'storage')
+DATABASE_DIR = pl.Path(STORAGE_DIR, 'databases')
 
 class NYISOData:
     """A class used to download and construct a local database from the NYISO.
@@ -37,24 +39,24 @@ class NYISOData:
         Path to directory which will contain directories for finalized databases and raw CSV files
     download_dir: Pathlib Object
         Path to directory within the storage_dir that will store the raw CSV files downloaded from the NYISO
-    output_dir: Pathlib Object
+    DATABASE_DIR: Pathlib Object
         Path to directory within the storage_dir that will store the finalized databases
     dataset_details: Namedtuple
         Namedtuple containing dataset details from 'dataset_url_map.yml'
 
     Methods
     -------
-    config
-        Creates the download_dir and output_dir directories if they don't exist
+    config 
+        Creates the download_dir and DATABASE_DIR directories if they don't exist
     main
         Handles logic for downloading data and constructing or reading finalized database
     get_raw_data
         Downloads and unzips raw CSV's from NYISO Website month by month
     """
 
-    def __init__(
-        self, dataset, year, redownload=False, reconstruct=False, create_csv=False
-    ):
+    def __init__(self, dataset, year,
+                 redownload=False, reconstruct=False,
+                 create_csv=False):
         """Creates a local database based on dataset name and year stored in UTC.
 
         Parameters
@@ -63,6 +65,9 @@ class NYISOData:
             Name of a supported dataset found in 'dataset_url_map.yml'
         year: str
             Dataset year in Eastern Standard Time
+            
+        TODO: update: bool, optional
+            A flag to stop the automatic downloading of new data from the current year (default is True)
         redownload: bool, optional
             A flag used to redownload CSV files (default is False)
         reconstruct: bool, optional
@@ -79,13 +84,9 @@ class NYISOData:
         self.redownload = redownload
         self.reconstruct = reconstruct
         self.create_csv = create_csv
-
-        self.curr_date = datetime.now(tz=pytz.timezone("US/Eastern"))
-        self.storage_dir = pl.Path(pl.Path(__file__).resolve().parent, "storage")
-        self.download_dir = pl.Path(
-            self.storage_dir, "raw_datafiles", self.dataset, self.year
-        )
-        self.output_dir = pl.Path(self.storage_dir, "databases")
+        
+        self.curr_date = datetime.now(tz=pytz.timezone('US/Eastern'))
+        self.download_dir = pl.Path(STORAGE_DIR, 'raw_datafiles', self.dataset, self.year)
         self.dataset_details = utils.fetch_dataset_url_map(self.dataset)
 
         # Methods
@@ -93,13 +94,13 @@ class NYISOData:
         self.main()
 
     def config(self):
-        """Creates the download_dir and output_dir directories if they don't exist"""
-        for dir_ in [self.download_dir, self.output_dir]:
+        """Creates the download_dir and DATABASE_DIR directories if they don't exist"""
+        for dir_ in [self.download_dir, DATABASE_DIR]:
             dir_.mkdir(parents=True, exist_ok=True)
 
     def main(self):
         """Handles logic for downloading data and constructing or reading finalized database"""
-        file_ = pl.Path(self.output_dir, f"{self.year}_{self.dataset}.pkl")
+        file_ = pl.Path(DATABASE_DIR, f'{self.year}_{self.dataset}.pkl')
         if not file_.exists() or self.redownload or self.reconstruct:
             if not file_.exists() or self.redownload:
                 self.get_raw_data()
@@ -231,11 +232,9 @@ class NYISOData:
             ), "NaNs Found! Resampling and interpolation should have handled this."
 
             # Save and return dataset in UTC
-            df = df.tz_convert("UTC")
-            filepath = pl.Path(self.output_dir, f"{self.year}_{self.dataset}.pkl")
-            df.to_pickle(
-                filepath
-            )  # pickle will contains timezone and frequency information
+            df = df.tz_convert('UTC')
+            filepath = pl.Path(DATABASE_DIR, f'{self.year}_{self.dataset}.pkl')
+            df.to_pickle(filepath)  # pickle will contains timezone and frequency information
             if self.create_csv:
                 df.to_csv(filepath)
             self.df = df

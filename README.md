@@ -1,4 +1,7 @@
 # NYISOToolkit
+A package for accessing power system data (NYISOData), generating statistics (NYISOStat), and creating visualizations (NYISOVis) from the New York Independent System Operator (NYISO).
+
+Check out the [NYISOToolkit Web App!](http://viosimos.com/nyisotoolkit/)
 
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
@@ -10,9 +13,8 @@ A package for accessing power system data (`NYISOData`), generating statistics (
 pip install git+https://github.com/m4rz910/NYISOToolkit#egg=nyisotoolkit
 ```
 
-## `NYISOVis`
-
-There are three kinds of visualizations currently supported - check them all out in the nyisotoolkit/nyisovis/visualizations folder. The visualizations are focused on communicating New York's status toward achieving the power sector decarbonization goals outlined by the Climate Leadership and Community Protection Act (CLCPA).
+## NYISOVis
+There are several visualizations currently supported - browse them on the [NYISOToolkit Web App](http://viosimos.com/nyisotoolkit/) or in the nyisotoolkit/nyisovis/visualizations folder. The visualizations are focused on communicating New York's status toward achieving the power sector decarbonization goals outlined by the Climate Leadership and Community Protection Act (CLCPA). 
 
 > No later than [June 13, 2021], the commission shall establish a program to require that:
 >
@@ -25,17 +27,15 @@ There are three kinds of visualizations currently supported - check them all out
 
 ```python
 from nyisotoolkit import NYISOData, NYISOStat, NYISOVis
-nv = NYISOVis(year='2019') #figures saved in nyisotoolkit/nyisovis/visualization folder by default.
-nv.fig_clcpa_carbon_free(f='D')  # daily (D) or monthy (M) frequency is recommended
-print(f"Figures saved by default to: {nv.out_dir} \nYou can change this by passing a pathlib object to the out_dir parameter to the NYISOVis object initialization.")
+nv = NYISOVis(year='2019') #figures saved in nyisotoolkit/nyisovis/visualization folder by default.  
+nv.fig_carbon_free_timeseries(f='D')  # daily (D) or monthy (M) frequency is recommended
+print(f"Figures saved by default to: {nv.out_dir} \nYou can change this by passing a pathlib object to the out_dir parameter in the NYISOVis object initialization.")
 
 ```
-
-![CLCPA](nyisotoolkit/nyisovis/visualizations/2019_clcpa_carbon_free_D.png)
+![CLCPA](nyisotoolkit/nyisovis/visualizations/2019_carbon_free_timeseries_D.png)
  
 ## NYISOData
-
-Raw Data Source: <http://mis.nyiso.com/public/>
+Raw Data Source: http://mis.nyiso.com/public/
 
 Dataset Name | Resolution | Description
 --- | --- | --

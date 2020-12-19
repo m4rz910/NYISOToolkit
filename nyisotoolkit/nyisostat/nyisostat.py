@@ -123,12 +123,10 @@ class NYISOStat:
         imports = (imports * 1 / 12).sum(axis="index").sum() / (10 ** 6)
 
         fuel_mix = fuel_mix.to_frame()
-        fuel_mix = fuel_mix.rename(columns={0: f"Historic ({self.year})"}).sort_values(
-            f"Historic ({self.year})", ascending=False
-        )
-
-        # reorder carbon free resources first
-        carbon_free_resources = ["Nuclear", "Hydro", "Other Renewables", "Wind"]
+        fuel_mix = fuel_mix.rename(columns={0:f'Historic ({self.year})'}).sort_values(f'Historic ({self.year})', ascending=False)
+        
+        #reorder carbon free resources first
+        carbon_free_resources = ['Hydro','Wind','Other Renewables','Nuclear']
         df = fuel_mix.loc[carbon_free_resources]
         df = pd.concat(
             [
