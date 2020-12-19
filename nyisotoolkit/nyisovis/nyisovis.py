@@ -74,7 +74,7 @@ class NYISOVis:
         
         #if redownload is passed, update existing databases
         #looks to see which datasets are available and redownloads them
-        if kwargs['redownload'] or kwargs['reconstruct']:
+        if kwargs.get("redownload", False) or kwargs.get("reconstruct", False):
             existing_dbs = pl.Path(DATABASE_DIR).glob(f"{self.year}*.pkl")
             existing_datasets = [db.name.replace(".pkl","").replace(f"{self.year}_","") for db in existing_dbs]
             for dataset in existing_datasets:
@@ -302,7 +302,7 @@ class NYISOVis:
                   ncol=1, fancybox=True, shadow=False)
         
         #Axes
-        ax.set(title=f'Historic ({self.year})',
+        ax.set(title=f'Carbon-free Year ({self.year})',
                xlabel=self.year, ylabel='% of Demand Served by Carbon-Free Energy',
                xlim=None, ylim=None)
         plt.xticks([])
