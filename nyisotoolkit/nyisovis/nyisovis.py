@@ -1,4 +1,5 @@
 import pathlib as pl
+import matplotlib as mpl
 import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
@@ -7,8 +8,9 @@ import yaml
 import pandas as pd
 import numpy as np
 
-from nyisotoolkit.nyisodata.nyisodata import NYISOData, DATABASE_DIR
+from nyisotoolkit.nyisodata.nyisodata import NYISOData, DATABASE_DIR, table_load_weighted_price
 from nyisotoolkit.nyisostat.nyisostat import NYISOStat
+
 
 # Figure Configuration
 plt.style.use(['seaborn-whitegrid'])
@@ -18,7 +20,8 @@ plt.rcParams.update({'font.weight': 'bold',
                      'lines.linewidth': 2,
                      'axes.titleweight': 'bold',
                      'axes.grid': True,
-                     'axes.edgecolor': '.15'})
+                     'axes.edgecolor': '.15',
+                     'legend.frameon': False})
 
 # Legend Colors
 c_dir = pl.Path(__file__).resolve().parent
@@ -30,6 +33,17 @@ with open(figure_config_path) as file:
 # List of Carbon Free Resources
 CARBONFREE_SOURCES = ["Hydro", "Other Renewables", "Wind", "Nuclear"]
 
+SEASONS = {12:"Winter", 1:"Winter", 2: "Winter",
+           3:"Spring", 4:"Spring", 5:"Spring",
+           6:"Summer", 7:"Summer", 8:"Summer",
+           9:"Fall", 10:"Fall", 11:"Fall"
+          }
+
+SEASON_COLORS = {"Winter": "blue",
+                 "Spring": "green",
+                 "Summer": "yellow",
+                 "Fall"  : "orange"
+                 }
 
 class NYISOVis:
     """A class used to create power system visualizations from the NYISOData and NYISOStat modules
@@ -342,7 +356,6 @@ class NYISOVis:
     def fig_decarbonization_heatmap(self):
         """Creates a figure depicting an overview of the seasonal and daily carbon-free operation.
         Inspired by: Google ESIG Presentation 10/13/2020
-        
         """
         
         tables = self.tables_carbon_free_timeseries(f='H') # Data
@@ -354,8 +367,9 @@ class NYISOVis:
         #Plot
         fig, ax = plt.subplots(figsize=(6,3), dpi=300)
         cmap = sns.diverging_palette(2, 145, as_cmap=True)
-        ax = sns.heatmap(df, cmap=cmap, vmin=0, vmax=100, ax=ax,
-                         cbar_kws={'label': '% of Demand Served by Carbon-Free Energy'})
+        ax = sns.heatmap(df, cmap=cmap, vmin=0, vmax=100, ax=ax)
+        ax.collections[0].colorbar.ax.set_ylabel('% of Demand Served by Carbon-Free Energy',
+                                                 rotation=270, labelpad=10)
         
         #Axes
         ax.set(title=f'Decarbonization Heat Map ({self.year})',
@@ -381,11 +395,180 @@ class NYISOVis:
         #Save
         file = pl.Path(self.out_dir,f'{self.year}_decarbonization_heatmap.png')
         fig.savefig(file, bbox_inches='tight', transparent=True)
-                
-    def fig_carbon_free_years():
+
+    def fig_decarbonization_clock(self):
+        """Creates a figure depicting 24 hour clock of the carbon-free operation of the average day.
+        Inspired by: Google ESIG Presentation 10/13/2020
+        """
+        tables = self.tables_carbon_free_timeseries(f='H') # Data
+        df = pd.DataFrame(tables['df'].sum(axis='columns')) #sum for total carbon-free %
+        df = df.groupby(df.index.hour).mean().sort_index(ascending=False)
+        
+        # Plot
+        fig, ax = plt.subplots(figsize=(6,6), dpi=300)
+        cmap = sns.diverging_palette(2, 145, as_cmap=True)
+        wedges, texts = ax.pie(np.ones(df.shape[0]),
+                               startangle=90+(360/24/2),
+                               colors=[c[0][:3] for c in cmap(df.values/100)],
+                               wedgeprops=dict(width=0.5)
+                               )
+        
+        # Colorbar
+        cax, cbar_kwds = mpl.colorbar.make_axes(ax, shrink=0.50, location="right", pad=-0.05)
+        cb1 = mpl.colorbar.ColorbarBase(cax, cmap=cmap, orientation='vertical')
+        cb1.ax.set_yticklabels([i for i in range(0,120,20)])
+        cb1.ax.set_ylabel('% of Demand Served by Carbon-Free Energy', rotation=270, labelpad=10)
+        cb1.outline.set_visible(False)
+        
+        # Annotations
+        hours = df.index
+        for i, p in enumerate(wedges):
+            ang = (p.theta2 - p.theta1)/2. + p.theta1
+            r = 0.55
+            y = np.sqrt(r)*np.sin(np.deg2rad(ang))
+            x = np.sqrt(r)*np.cos(np.deg2rad(ang))
+            ax.annotate(hours[i], xy=(x, y),
+                        horizontalalignment="center",
+                        verticalalignment="center"
+                        )
+        
+        # NYISOToolkit label and source
+        ax.text(0.845, 0.08, 'NYISOToolkit (Datasource: NYISO OASIS)',
+                c='black', fontsize='4', fontstyle= 'italic', horizontalalignment='center',
+                alpha=0.6, transform=ax.transAxes)
+    
+        # axes
+        ax.set_title(f'Decarbonization Clock ({self.year})', y=0.91)
+        
+        # Save
+        file = pl.Path(self.out_dir,f'{self.year}_decarbonization_heatmap.png')
+        fig.savefig(file, bbox_inches='tight', transparent=True)
+    
+    def demand_pdf(self, cumulative=False):
+        """Creates a figure of the year's demand probability density function."""
+        df = NYISOData(dataset="load_5m", year=self.year).df.tz_convert('US/Eastern')["NYCA"]/1000 #MW->GW
+        df = pd.DataFrame(df)
+        ax_kwargs = {"title":f'State-wide Demand Probability Distribution ({self.year})',
+                     "xlabel":"Demand (GW)", "ylabel":"Probability",
+                     "xlim":None, "ylim":None}
+        
+        HISTPLOT_KWARGS.update({"cumulative":cumulative})
+        if cumulative:
+            ax_kwargs.update({"title": f'State-wide Demand Cumulative Probability Distribution ({self.year})'})
+        fig = pdf(df.rename(columns={'NYCA':"Values"}), ax_kwargs, HISTPLOT_KWARGS)
+        # Save
+        if cumulative:
+            file = pl.Path(self.out_dir,f'{self.year}_demand_cumulative_pdf.png')
+        else:
+            file = pl.Path(self.out_dir,f'{self.year}_demand_pdf.png')
+        fig.savefig(file, bbox_inches='tight', transparent=True)
+
+    def price_pdf(self, rt, cumulative = False):
+        """Creates a figure of the state-wide average energy price probability distribution.
+        
+        Todo: DA price should be weighted by the DA load prediction. RT should be weighed by real demand.
+        """
+        df = table_load_weighted_price(year=self.year, rt=rt)
+        da_rt = "RT" if rt else "DA"
+        ax_kwargs = {"title":f'State-wide Average Baseload {da_rt} Energy Price\n Probability Distribution ({self.year})',
+                     "xlabel":"Price ($/MWh)", "ylabel":"Probability",
+                     "xlim":None, "ylim":None}
+        HISTPLOT_KWARGS.update({"cumulative":cumulative})
+        if cumulative:
+            ax_kwargs.update({"title": f'State-wide Average Baseload {da_rt} Energy Price\n Cumulative Probability Distribution ({self.year})'})
+        fig = pdf(df.rename(columns={0:"Values"}), ax_kwargs, HISTPLOT_KWARGS)
+        # Save
+        if cumulative:
+            file = pl.Path(self.out_dir,f'{self.year}_{da_rt}_price_cumulative_pdf.png')
+        else:
+            file = pl.Path(self.out_dir,f'{self.year}_{da_rt}_price_pdf.png')
+        fig.savefig(file, bbox_inches='tight', transparent=True)
+        
+    def price_delta_pdf(self, cumulative = False):
+        rt_price = table_load_weighted_price(year=self.year, rt=True).resample("H").mean()
+        da_price = table_load_weighted_price(year=self.year, rt=False)
+        rt_da_delta = da_price - rt_price
+        ax_kwargs = {"title":f'State-wide Average Baseload DA-RT Energy Price Difference\n Probability Distribution ({self.year})',
+                     "xlabel":"Price ($/MWh)", "ylabel":"Probability",
+                     "xlim":None, "ylim":None}
+        
+        HISTPLOT_KWARGS.update({"cumulative":cumulative})
+        if cumulative:
+            ax_kwargs.update({"title": f'State-wide Average Baseload DA-RT Energy Price Differenence\n Cumulative Probability Distribution ({self.year})'})
+        fig = pdf(rt_da_delta.rename(columns={0:"Values"}), ax_kwargs, HISTPLOT_KWARGS)
+        # Save
+        if cumulative:
+            file = pl.Path(self.out_dir,f'{self.year}_pricedelta_cumulative_pdf.png')
+        else:
+            file = pl.Path(self.out_dir,f'{self.year}_pricedelta_pdf.png')
+        fig.savefig(file, bbox_inches='tight', transparent=True)
+    
+    def fig_carbon_free_years(self):
         """Todo: stacked area chart over time using nyisostat annual summary"""
         return
 
-    def net_load():
+    def net_load(self):
         """Todo: Load vs Net Load Shape"""
         return
+    
+def pdf(df, ax_kwargs, histplot_kwargs):
+    """General function for generating probabilty density functions."""
+    fig, ax = plt.subplots(figsize=(6,3), dpi=300)
+    df['Season'] = df.index.month.map(SEASONS)
+    histplot_kwargs.update({"data": df, "x": "Values",
+                            "hue": 'Season',"palette": SEASON_COLORS,
+                            "ax": ax,
+                            "stat": "probability",
+                            "kde": True,
+                            "alpha": 0.5,
+                            "legend":True,
+                            })
+    
+    ax = sns.histplot(**histplot_kwargs)
+    ax.set(**ax_kwargs)
+    ax = fix_legend(ax, loc='right', bbox_to_anchor=(1.2, 0.5), ncol=1) #
+    return ax.figure
+
+def fix_legend(ax, **kws):
+    """https://github.com/mwaskom/seaborn/issues/2280"""
+    old_legend = ax.legend_
+    handles = old_legend.legendHandles
+    labels = [t.get_text() for t in old_legend.get_texts()]
+    #title = old_legend.get_title().get_text()
+    ax.legend(handles, labels, **kws)
+    return ax
+
+def basic_plots(nyisovis_kwa):
+    nv = NYISOVis(**nyisovis_kwa)
+    nv.fig_carbon_free_year()
+    nv.fig_decarbonization_heatmap()
+    nv.fig_decarbonization_clock()
+    for f in ['D','M']:
+        nv.fig_energy_generation(f=f)
+        nv.fig_carbon_free_timeseries(f=f)
+            
+def statistical_plots(nyisovis_kwa):
+    nv = NYISOVis(**nyisovis_kwa)
+    for rtorda in [False, True]:
+        for c in [False, True]:
+            nv.demand_pdf(cumulative=c)
+            nv.price_pdf(rt=rtorda, cumulative=c)
+            nv.price_delta_pdf(cumulative=c)
+
+HISTPLOT_KWARGS = {"data": None,
+                   "ax": None,
+                   "x": None, "y": None, 
+                   "hue": None, "weights": None,
+                   "stat": 'count',
+                   "bins": 'auto', "binwidth": None, "binrange": None,
+                   "discrete": None,
+                   "cumulative": False,
+                   "common_bins": True, "common_norm": True,
+                   "multiple": 'layer', "element": 'step', 
+                   "fill": True, "shrink": 1, 
+                   "kde": False, "kde_kws": None, "line_kws": None, 
+                   "thresh": 0, "pthresh": None, "pmax": None,
+                   "cbar": False, "cbar_ax": None, "cbar_kws": None,
+                   "palette": None, "hue_order": None, "hue_norm": None, "color": None, 
+                   "log_scale": None,
+                   "legend": True}

@@ -51,8 +51,7 @@ class NYISOStat:
             Energy table [GWh]
         """
 
-        nd = NYISOData(dataset=dataset, year=year)
-        df = nd.df.tz_convert("US/Eastern")  # MW
+        df = NYISOData(dataset=dataset, year=year).df.tz_convert("US/Eastern")  # MW
         if nd.f == "5T":
             df = (df * 1 / 12).resample("H").sum() / 1000  # MW->MWh->GWh
         elif nd.f == "H":
@@ -191,4 +190,4 @@ class NYISOStat:
         date = df.idxmax()
         df = df.loc[date.strftime("%Y-%m-%d")]
         df.index = df.index.hour
-        return df
+        return df    

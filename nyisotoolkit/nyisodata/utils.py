@@ -2,6 +2,8 @@ from datetime import timedelta
 from collections import namedtuple
 import pandas as pd
 import pathlib as pl
+from datetime import datetime
+import pytz
 
 BASE_URL = "http://mis.nyiso.com/public/csv/"
 YAML_FILE = "dataset_url_map.yml"
@@ -110,3 +112,10 @@ def fetch_ts_start_end(cur_date, request_year, frequency):
         raise Exception("We should never get here..")
 
     return start, end
+    
+def current_year():
+    """Gets the current year in the US/Eastern timezone"""
+    d = datetime.now()
+    timezone = pytz.timezone("US/Eastern")
+    d_aware = timezone.localize(d)
+    return d_aware.year

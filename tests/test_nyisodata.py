@@ -1,9 +1,7 @@
-import pytest
-
-from nyisotoolkit import construct_databases, SUPPORTED_DATASETS
+from nyisotoolkit import construct_databases, SUPPORTED_DATASETS, NYISOData
 
 
-def test_datasets(years=["2019"]):
+def test_datasets(years=[2019]):
     datasets = SUPPORTED_DATASETS
     construct_databases(
         years=years,
@@ -12,3 +10,6 @@ def test_datasets(years=["2019"]):
         reconstruct=True,
         create_csv=False,
     )
+
+if __name__ == "__main__":
+    test_datasets()
