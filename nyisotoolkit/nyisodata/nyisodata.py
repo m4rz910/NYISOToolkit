@@ -255,7 +255,7 @@ def table_load_weighted_price(year, rt):
                                                             load_df.index.shape[0],
                                                             lbmp_df.index.shape[0])
                                                             )
-    return pd.DataFrame((load_df*lbmp_df).sum(axis="columns")/load_df["NYCA"])
+    return pd.DataFrame((load_df*lbmp_df).sum(axis="columns")/load_df["NYCA"]) #$/MWh
 
 EXTERNAL_TFLOWS_MAP = {
     "SCH - HQ - NY": "HQ CHATEAUGUAY",

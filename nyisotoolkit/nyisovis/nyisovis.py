@@ -2,6 +2,7 @@ import pathlib as pl
 import matplotlib as mpl
 import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
+import matplotlib.ticker as mtick
 from mpl_toolkits.mplot3d import Axes3D
 import seaborn as sns
 import yaml
@@ -11,40 +12,13 @@ import numpy as np
 from nyisotoolkit.nyisodata.nyisodata import NYISOData, DATABASE_DIR, table_load_weighted_price
 from nyisotoolkit.nyisostat.nyisostat import NYISOStat
 
-
-# Figure Configuration
-plt.style.use(['seaborn-whitegrid'])
-plt.rcParams.update({'font.weight': 'bold',
-                     'font.size': 8,
-                     'axes.labelweight': 'bold',
-                     'lines.linewidth': 2,
-                     'axes.titleweight': 'bold',
-                     'axes.grid': True,
-                     'axes.edgecolor': '.15',
-                     'legend.frameon': False})
-
 # Legend Colors
 c_dir = pl.Path(__file__).resolve().parent
 figure_config_path = pl.Path(c_dir, "legend_colors.yml")
 with open(figure_config_path) as file:
     all_configs = yaml.load(file, Loader=yaml.FullLoader)
     LEGEND_DEETS = all_configs["legend_colors"]
-
-# List of Carbon Free Resources
-CARBONFREE_SOURCES = ["Hydro", "Other Renewables", "Wind", "Nuclear"]
-
-SEASONS = {12:"Winter", 1:"Winter", 2: "Winter",
-           3:"Spring", 4:"Spring", 5:"Spring",
-           6:"Summer", 7:"Summer", 8:"Summer",
-           9:"Fall", 10:"Fall", 11:"Fall"
-          }
-
-SEASON_COLORS = {"Winter": "blue",
-                 "Spring": "green",
-                 "Summer": "yellow",
-                 "Fall"  : "orange"
-                 }
-
+    
 class NYISOVis:
     """A class used to create power system visualizations from the NYISOData and NYISOStat modules
 
@@ -444,13 +418,13 @@ class NYISOVis:
         file = pl.Path(self.out_dir,f'{self.year}_decarbonization_heatmap.png')
         fig.savefig(file, bbox_inches='tight', transparent=True)
     
-    def demand_pdf(self, cumulative=False):
+    def fig_demand_pdf(self, cumulative=False):
         """Creates a figure of the year's demand probability density function."""
         df = NYISOData(dataset="load_5m", year=self.year).df.tz_convert('US/Eastern')["NYCA"]/1000 #MW->GW
         df = pd.DataFrame(df)
         ax_kwargs = {"title":f'State-wide Demand Probability Distribution ({self.year})',
-                     "xlabel":"Demand (GW)", "ylabel":"Probability",
-                     "xlim":None, "ylim":None}
+                     "xlabel":"Demand [GW]", "ylabel":"Probability [%]",
+                     "xlim":(df.values.min(),df.values.max()), "ylim":None}
         
         HISTPLOT_KWARGS.update({"cumulative":cumulative})
         if cumulative:
@@ -462,17 +436,37 @@ class NYISOVis:
         else:
             file = pl.Path(self.out_dir,f'{self.year}_demand_pdf.png')
         fig.savefig(file, bbox_inches='tight', transparent=True)
-
-    def price_pdf(self, rt, cumulative = False):
-        """Creates a figure of the state-wide average energy price probability distribution.
+    
+    def fig_demand_forecast_error(self, cumulative=False):
+        load = NYISOData(dataset="load_h", year=self.year).df.tz_convert('US/Eastern')["NYCA"] #MW
+        load_forecast = NYISOData(dataset="load_forecast_h", year=self.year).df.tz_convert('US/Eastern')["NYCA"] #MW
+        load_forecast = load_forecast.loc[load.index]
+        df = (load_forecast-load)/load *100 # error [%]
+        df = pd.DataFrame(df)
+        ax_kwargs = {"title":f'State-wide Demand Forecast Error Probability Distribution ({self.year})',
+                     "xlabel":"Demand [MW]", "ylabel":"Probability [%]",
+                     "xlim":(df.values.min(),df.values.max()), "ylim":None}
         
-        Todo: DA price should be weighted by the DA load prediction. RT should be weighed by real demand.
+        HISTPLOT_KWARGS.update({"cumulative":cumulative})
+        if cumulative:
+            ax_kwargs.update({"title": f'State-wide Demand Forecast Error Cumulative Probability Distribution ({self.year})'})
+        fig = pdf(df.rename(columns={'NYCA':"Values"}), ax_kwargs, HISTPLOT_KWARGS)
+        # Save
+        if cumulative:
+            file = pl.Path(self.out_dir,f'{self.year}_demand_forecast_error_cumulative_pdf.png')
+        else:
+            file = pl.Path(self.out_dir,f'{self.year}_demand_forecast_error_pdf.png')
+        fig.savefig(file, bbox_inches='tight', transparent=True)
+
+
+    def fig_price_pdf(self, rt, cumulative = False):
+        """Creates a figure of the state-wide average energy price probability distribution.
         """
-        df = table_load_weighted_price(year=self.year, rt=rt)
+        df = table_load_weighted_price(year=self.year, rt=rt) #$/MWh
         da_rt = "RT" if rt else "DA"
         ax_kwargs = {"title":f'State-wide Average Baseload {da_rt} Energy Price\n Probability Distribution ({self.year})',
-                     "xlabel":"Price ($/MWh)", "ylabel":"Probability",
-                     "xlim":None, "ylim":None}
+                     "xlabel":"Price ($/MWh)", "ylabel":"Probability [%]",
+                     "xlim":(df.values.min(),df.values.max()), "ylim":None}
         HISTPLOT_KWARGS.update({"cumulative":cumulative})
         if cumulative:
             ax_kwargs.update({"title": f'State-wide Average Baseload {da_rt} Energy Price\n Cumulative Probability Distribution ({self.year})'})
@@ -484,23 +478,23 @@ class NYISOVis:
             file = pl.Path(self.out_dir,f'{self.year}_{da_rt}_price_pdf.png')
         fig.savefig(file, bbox_inches='tight', transparent=True)
         
-    def price_delta_pdf(self, cumulative = False):
-        rt_price = table_load_weighted_price(year=self.year, rt=True).resample("H").mean()
-        da_price = table_load_weighted_price(year=self.year, rt=False)
-        rt_da_delta = da_price - rt_price
+    def fig_price_difference_pdf(self, cumulative = False):
+        rt_price = table_load_weighted_price(year=self.year, rt=True).resample("H").mean() #$/MWh
+        da_price = table_load_weighted_price(year=self.year, rt=False) #$/MWh
+        df = da_price - rt_price
         ax_kwargs = {"title":f'State-wide Average Baseload DA-RT Energy Price Difference\n Probability Distribution ({self.year})',
-                     "xlabel":"Price ($/MWh)", "ylabel":"Probability",
-                     "xlim":None, "ylim":None}
+                     "xlabel":"Price ($/MWh)", "ylabel":"Probability [%]",
+                     "xlim":(df.values.min(),df.values.max()), "ylim":None}
         
         HISTPLOT_KWARGS.update({"cumulative":cumulative})
         if cumulative:
-            ax_kwargs.update({"title": f'State-wide Average Baseload DA-RT Energy Price Differenence\n Cumulative Probability Distribution ({self.year})'})
-        fig = pdf(rt_da_delta.rename(columns={0:"Values"}), ax_kwargs, HISTPLOT_KWARGS)
+            ax_kwargs.update({"title": f'State-wide Average Baseload DA-RT Energy Price Difference \n Cumulative Probability Distribution ({self.year})'})
+        fig = pdf(df.rename(columns={0:"Values"}), ax_kwargs, HISTPLOT_KWARGS)
         # Save
         if cumulative:
-            file = pl.Path(self.out_dir,f'{self.year}_pricedelta_cumulative_pdf.png')
+            file = pl.Path(self.out_dir,f'{self.year}_price_difference_cumulative_pdf.png')
         else:
-            file = pl.Path(self.out_dir,f'{self.year}_pricedelta_pdf.png')
+            file = pl.Path(self.out_dir,f'{self.year}_price_difference_pdf.png')
         fig.savefig(file, bbox_inches='tight', transparent=True)
     
     def fig_carbon_free_years(self):
@@ -523,10 +517,15 @@ def pdf(df, ax_kwargs, histplot_kwargs):
                             "alpha": 0.5,
                             "legend":True,
                             })
-    
     ax = sns.histplot(**histplot_kwargs)
+    ax = fix_legend(ax, loc='right', bbox_to_anchor=(1.2, 0.5), ncol=1)
     ax.set(**ax_kwargs)
-    ax = fix_legend(ax, loc='right', bbox_to_anchor=(1.2, 0.5), ncol=1) #
+    ax.yaxis.set_major_formatter(mtick.PercentFormatter(1.0, symbol=None))
+
+    # NYISOToolkit label and source
+    ax.text(0.87, 0.01, 'NYISOToolkit (Datasource: NYISO OASIS)',
+            c='black', fontsize='4', fontstyle= 'italic', horizontalalignment='center',
+            alpha=0.6, transform=ax.transAxes)
     return ax.figure
 
 def fix_legend(ax, **kws):
@@ -551,9 +550,36 @@ def statistical_plots(nyisovis_kwa):
     nv = NYISOVis(**nyisovis_kwa)
     for rtorda in [False, True]:
         for c in [False, True]:
-            nv.demand_pdf(cumulative=c)
-            nv.price_pdf(rt=rtorda, cumulative=c)
-            nv.price_delta_pdf(cumulative=c)
+            nv.fig_demand_pdf(cumulative=c)
+            nv.fig_demand_forecast_error(cumulative=c)
+            nv.fig_price_pdf(rt=rtorda, cumulative=c)
+            nv.fig_price_difference_pdf(cumulative=c)
+
+# Figure Configuration
+plt.style.use(['seaborn-whitegrid'])
+plt.rcParams.update({'font.weight': 'bold',
+                     'font.size': 8,
+                     'axes.labelweight': 'bold',
+                     'lines.linewidth': 2,
+                     'axes.titleweight': 'bold',
+                     'axes.grid': True,
+                     'axes.edgecolor': '.15',
+                     'legend.frameon': False})
+
+# List of Carbon Free Resources
+CARBONFREE_SOURCES = ["Hydro", "Other Renewables", "Wind", "Nuclear"]
+
+SEASONS = {12:"Winter", 1:"Winter", 2: "Winter",
+           3:"Spring", 4:"Spring", 5:"Spring",
+           6:"Summer", 7:"Summer", 8:"Summer",
+           9:"Fall", 10:"Fall", 11:"Fall"
+          }
+
+SEASON_COLORS = {"Winter": "tab:gray",
+                 "Spring": "tab:green",
+                 "Summer": "tab:cyan",
+                 "Fall"  : "tab:orange"
+                 }
 
 HISTPLOT_KWARGS = {"data": None,
                    "ax": None,
