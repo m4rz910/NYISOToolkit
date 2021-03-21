@@ -415,7 +415,7 @@ class NYISOVis:
         ax.set_title(f'Decarbonization Clock ({self.year})', y=0.91)
         
         # Save
-        file = pl.Path(self.out_dir,f'{self.year}_decarbonization_heatmap.png')
+        file = pl.Path(self.out_dir,f'{self.year}_decarbonization_clock.png')
         fig.savefig(file, bbox_inches='tight', transparent=True)
     
     def fig_demand_pdf(self, cumulative=False):
