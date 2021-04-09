@@ -1,5 +1,8 @@
 ## NYISOToolkit
 
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+
+
 A package for accessing power system data (`NYISOData`), generating statistics (`NYISOStat`), and creating visualizations (`NYISOVis`) from the [New York Independent System Operator (NYISO)](https://www.nyiso.com/).
 
 Check out the [NYISOToolkit Web App!](http://viosimos.com/nyisotoolkit/)
