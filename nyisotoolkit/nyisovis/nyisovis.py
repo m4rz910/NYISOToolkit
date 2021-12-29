@@ -458,7 +458,6 @@ class NYISOVis:
             file = pl.Path(self.out_dir,f'{self.year}_demand_forecast_error_pdf.png')
         fig.savefig(file, bbox_inches='tight', transparent=True)
 
-
     def fig_price_pdf(self, rt, cumulative = False):
         """Creates a figure of the state-wide average energy price probability distribution.
         """
