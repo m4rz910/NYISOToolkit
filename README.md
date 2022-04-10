@@ -64,7 +64,7 @@ nv = NYISOVis(year='2019') #figures saved in nyisotoolkit/nyisovis/visualization
 nv.fig_carbon_free_timeseries(f='D')  # daily (D) or monthy (M) frequency is recommended
 print(f"Figures saved by default to: {nv.out_dir} \nYou can change this by passing a pathlib object to the out_dir parameter in the NYISOVis object initialization.")
 ```
-![CLCPA](nyisotoolkit/nyisovis/visualizations/2020_carbon_free_timeseries_D.png)
+![CLCPA](nyisotoolkit/nyisovis/visualizations/2021_carbon_free_timeseries_D.png)
 
 ### More Dataset Information
 
