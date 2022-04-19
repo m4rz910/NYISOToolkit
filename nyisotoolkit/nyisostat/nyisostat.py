@@ -52,9 +52,9 @@ class NYISOStat:
         """
 
         df = NYISOData(dataset=dataset, year=year).df.tz_convert("US/Eastern")  # MW
-        if nd.f == "5T":
+        if df.f == "5T":
             df = (df * 1 / 12).resample("H").sum() / 1000  # MW->MWh->GWh
-        elif nd.f == "H":
+        elif df.f == "H":
             df = df.sum() / 1000  # MW=MWh->GWh
         return df
 
