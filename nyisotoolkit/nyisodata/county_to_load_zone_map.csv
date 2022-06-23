@@ -1,0 +1,65 @@
+Source: https://www.nyiso.com/documents/20142/1397960/nyca_zonemaps.pdf/8c3807e1-5bab-ab44-3c71-2c8e61b5748b,
+,"note some counties are in multiple zones, the assigned load zone is where the majority of the county is"
+county,load zone
+chautauqua,a
+niagra,a
+erie,a
+cattaragus,a
+orleans,a
+genesee,a
+wyoming,a
+livingston,a
+allegany,b
+monroe,b
+wayne,b
+ontario,b
+steuben,c
+yates,c
+seneca,c
+schuyler,c
+chemung,c
+cayuga,c
+tompkins,c
+tioga,c
+oswego,c
+onondaga,c
+cortland,c
+broome,c
+clinton,d
+franklin,e
+st lawrence,e
+jefferson,e
+lewis,e
+oneida,e
+herkimer,e
+madison,e
+chenango,e
+ostego,e
+delaware,e
+sullivan,e
+essex,f
+hamilton,f
+warren,f
+fulton,f
+saratoga,f
+washington,f
+mongomery,f
+schenectady,f
+schoharie,f
+albany,f
+renselaer,f
+columbia,f
+greene,g
+ulster,g
+dutches,g
+orange,g
+putnam,g
+rockland,g
+westchester,I
+bronx,j
+new york,j
+richmond,j
+kings,j
+queens,j
+nassau,k
+suffolk,k
