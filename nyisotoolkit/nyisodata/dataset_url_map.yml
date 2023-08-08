@@ -61,6 +61,24 @@ lbmp_rt_5m:
   col: Name
   val_col:  # None
 
+lbmp_dam_h_refbus:
+  type: lbmp
+  url:
+    pre: refbus
+    post: damlbmp_gen_refbus_csv.zip
+  f: H
+  col: 
+  val_col: MC of Energy?
+
+lbmp_rt_h_refbus:
+  type: lbmp
+  url:
+    pre: refbus
+    post: damlbmp_gen_refbus_csv.zip
+  f: H
+  col: 
+  val_col: MC of Energy?
+
 asp_rt:
   type: asp
   url:

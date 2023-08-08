@@ -145,7 +145,15 @@ class NYISOData:
             print("Warning: No raw datafiles found!")
             return  # skip the rest
         else:
-            frames = [pd.read_csv(file, index_col=0) for file in files]  # Concatenate all CSVs into a DataFrame
+            if self.dataset in ['lbmp_dam_h_refbus','lbmp_rt_h_refbus']:
+                frames = [(pd.read_csv(file,header=None)
+                           .rename(columns={0:'Time Stamp', 1:'Name', 2:'ID?', 3:'Marginal Cost of Energy', 4:'Loss?', 5:'Cong?'})
+                           .set_index('Time Stamp')
+                           .drop(columns='Name') # theres only the reference bus and we cant
+                           )
+                          for file in files]  # Concatenate all CSVs into a DataFrame
+            else:
+                frames = [pd.read_csv(file, index_col=0) for file in files]  # Concatenate all CSVs into a DataFrame
             df = pd.concat(frames, sort=False)
             df.index = pd.to_datetime(df.index)
 
@@ -170,7 +178,7 @@ class NYISOData:
                     subdf = subdf.tz_localize(
                         "US/Eastern", ambiguous="infer"
                     ).tz_convert("UTC")
-                    subdf = subdf.resample(self.dataset_details.f).mean()
+                    subdf = subdf.resample(self.dataset_details.f).mean(numeric_only=True)
                     subdf = utils.check_and_interpolate_nans(subdf)
                     subdf.loc[:, self.dataset_details.col] = ctype
                     frames.append(subdf)
@@ -279,6 +287,8 @@ SUPPORTED_DATASETS = [
     "fuel_mix_5m",
     "lbmp_dam_h",
     "lbmp_rt_5m",
+    'lbmp_dam_h_refbus',
+    'lbmp_rt_h_refbus',
     "asp_dam",
     "asp_rt",
 ]

@@ -37,6 +37,8 @@ Dataset Name | Resolution | Description
 `interface_flows_5m` | 5-min | real-time flows between regions
 `lbmp_dam_h` | hourly | day-ahead zonal Locational Based Marginal Price (LBMP)
 `lbmp_rt_5m` | 5-min | real-time zonal LBMP
+`lbmp_dam_h_refbus` | hourly | day-ahead reference bus marginal cost of energy
+`lbmp_rt_h_refbus` | hourly | time weighted average rt reference bus marginal cost of energy
 `asp_rt` | 5-min | real-time zonal ancillary service prices
 `asp_dam` | hourly | day-ahead zonal ancillary service prices
 
