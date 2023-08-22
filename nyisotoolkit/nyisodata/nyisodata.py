@@ -158,34 +158,35 @@ class NYISOData:
             df.index = pd.to_datetime(df.index)
 
             if ("Time Zone" in df.columns) or (self.dataset_details.col is None):
+                # handle index timezone inconsistencies
                 if "Time Zone" in df.columns:  # Make index timezone aware (US/Eastern)
-                    df = df.tz_localize(
-                        "US/Eastern", ambiguous=df["Time Zone"] == "EST"
-                    )
+                    df = df.tz_localize("US/Eastern", ambiguous=df["Time Zone"] == "EST")
                 elif self.dataset_details.col is None:  # there is no need to pivot
                     df = df.tz_localize("US/Eastern", ambiguous="infer")
                 df = df.sort_index(axis="index").tz_convert("UTC")  # Convert to UTC so that pivot can work without throwing error for duplicate indices
-                if "Time Zone" in df.columns:  # make stacked columns
+                
+                if ("Time Zone" in df.columns):  # make stacked columns
                     df = df.pivot(
                         columns=self.dataset_details.col,
                         values=self.dataset_details.val_col,
                     )
                 df = df.resample(self.dataset_details.f).mean()
                 df = utils.check_and_interpolate_nans(df)
-            else:  # When there is no timezone column and there is 'stacked' data
+            else:  # When there is no timezone column and there is 'stacked' data ()
                 frames = []
                 for ctype, subdf in df.groupby(by=self.dataset_details.col):
-                    subdf = subdf.tz_localize(
-                        "US/Eastern", ambiguous="infer"
-                    ).tz_convert("UTC")
+                    subdf = subdf.tz_localize("US/Eastern", ambiguous="infer").tz_convert("UTC")
                     subdf = subdf.resample(self.dataset_details.f).mean(numeric_only=True)
                     subdf = utils.check_and_interpolate_nans(subdf)
                     subdf.loc[:, self.dataset_details.col] = ctype
                     frames.append(subdf)
                 df = pd.concat(frames)
-                # Check if the number of regions/interface flow name are equal
-                if not (len(set(df[self.dataset_details.col].value_counts().values)) <= 1):
-                    print(f"Warning: There seems to be underlying missing data.\n{df[self.dataset_details.col].value_counts()}")
+                
+                if isinstance(self.dataset_details.val_col,list):
+                    df = df.pivot(
+                        columns=self.dataset_details.col,
+                        values=self.dataset_details.val_col,
+                    )
 
             df = self.dataset_adjustments(df) # Dataset specific adjustments
 

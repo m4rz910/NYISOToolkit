@@ -50,7 +50,10 @@ lbmp_dam_h:
     post: damlbmp_zone_csv.zip
   f: H
   col: Name
-  val_col: # None
+  val_col: 
+    - LBMP ($/MWHr)
+    - Marginal Cost Losses ($/MWHr)
+    - Marginal Cost Congestion ($/MWHr)
 
 lbmp_rt_5m:
   type: lbmp
@@ -59,7 +62,10 @@ lbmp_rt_5m:
     post: realtime_zone_csv.zip
   f: 5T
   col: Name
-  val_col:  # None
+  val_col:
+    - LBMP ($/MWHr)
+    - Marginal Cost Losses ($/MWHr)
+    - Marginal Cost Congestion ($/MWHr)
 
 lbmp_dam_h_refbus:
   type: lbmp
@@ -86,7 +92,11 @@ asp_rt:
     post: rtasp_csv.zip
   f: 5T
   col: Name
-  val_col:  # None
+  val_col:
+    - 10 Min Spinning Reserve ($/MWHr)
+    - 10 Min Non-Synchronous Reserve ($/MWHr)
+    - 30 Min Operating Reserve ($/MWHr)
+    - NYCA Regulation Capacity ($/MWHr)
 
 asp_dam:
   type: asp
@@ -95,4 +105,8 @@ asp_dam:
     post: damasp_csv.zip
   f: H
   col: Name
-  val_col:  # None
+  val_col:
+    - 10 Min Spinning Reserve ($/MWHr)
+    - 10 Min Non-Synchronous Reserve ($/MWHr)
+    - 30 Min Operating Reserve ($/MWHr)
+    - NYCA Regulation Capacity ($/MWHr)
