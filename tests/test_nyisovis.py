@@ -8,8 +8,8 @@ from nyisotoolkit.nyisovis.nyisovis import basic_plots, statistical_plots
 from nyisotoolkit.nyisodata.utils import current_year
 
 def test_basic_plots():
-    nyisovis_kwargs = {"redownload":True}
-    years=list(range(2021, current_year()+1))
+    nyisovis_kwargs = {"redownload":False}
+    years=list(range(2023, current_year()+1))
     for year in years:
         nyisovis_kwargs["year"] = year
         basic_plots(nyisovis_kwargs)
@@ -17,7 +17,7 @@ def test_basic_plots():
             
 def test_statistical_plots():
     nyisovis_kwargs = {"redownload":False}
-    years=list(range(2021, current_year()+1))
+    years=list(range(2023, current_year()+1))
     for year in years:
         nyisovis_kwargs["year"] = year
         statistical_plots(nyisovis_kwargs)

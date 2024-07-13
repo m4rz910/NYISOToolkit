@@ -52,9 +52,9 @@ class NYISOStat:
         """
 
         df = NYISOData(dataset=dataset, year=year).df.tz_convert("US/Eastern")  # MW
-        if df.f == "5T":
-            df = (df * 1 / 12).resample("H").sum() / 1000  # MW->MWh->GWh
-        elif df.f == "H":
+        if df.f == "5min":
+            df = (df * 1 / 12).resample("h").sum() / 1000  # MW->MWh->GWh
+        elif df.f == "h":
             df = df.sum() / 1000  # MW=MWh->GWh
         return df
 
@@ -163,7 +163,7 @@ class NYISOStat:
             "US/Eastern"
         )
         df = df[("Internal Flows", "TOTAL EAST", "Flow (MW)")]
-        df = (df * 1 / 12).resample("H").sum() / 1000  # MW->MWh->GWh
+        df = (df * 1 / 12).resample("h").sum() / 1000  # MW->MWh->GWh
         return df
 
     def table_average_day_instate_flow(self):

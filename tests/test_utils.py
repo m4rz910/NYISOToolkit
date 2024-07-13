@@ -75,9 +75,9 @@ def test_fetch_dataset_url_map_general():
         dataset,
         "lbmp",
         utils.BASE_URL + "realtime" + "/{}" + "realtime_zone_csv.zip",
-        "5T",
+        "5min",
         "Name",
-        None,
+        ['LBMP ($/MWHr)', 'Marginal Cost Losses ($/MWHr)', 'Marginal Cost Congestion ($/MWHr)'],
     )
     assert utils.fetch_dataset_url_map(dataset) == expected
 
@@ -90,7 +90,7 @@ def test_fetch_dataset_url_map_failure():
 def test_build_db_ts_range_general():
     cur_date = datetime.datetime(2020, 8, 5)
     request_year = 2019
-    frequency = "H"
+    frequency = "h"
 
     exp_start = f"{request_year}-01-01 00:00:00"
     exp_end = f"{request_year}-12-31 23:00:00"
@@ -108,7 +108,7 @@ def test_build_db_ts_range_general():
 def test_build_db_ts_range_bad_year():
     cur_date = datetime.datetime(2020, 8, 5)
     request_year = 2021  # later than current
-    frequency = "H"
+    frequency = "h"
 
     with pytest.raises(ValueError):
         utils.fetch_ts_start_end(
@@ -123,3 +123,6 @@ def test_build_db_ts_range_unsupported_frequency():
 
     with pytest.raises(NotImplementedError):
         utils.fetch_ts_start_end(cur_date, request_year, frequency)
+        
+if __name__ == "__main__":
+    test_fetch_dataset_url_map_general()

@@ -74,7 +74,7 @@ class NYISOVis:
         Parameters
         ----------
         f: str
-            Frequency of graph to generate (daily ('D') and monthly ('M') recommended)
+            Frequency of graph to generate (daily ('D') and monthly ("ME") recommended)
 
         Returns
         -------
@@ -118,8 +118,8 @@ class NYISOVis:
 
         def month_adj_object(df):
             """Adjust index for months and make index objects to label correctly"""
-            if f == "M":
-                df.index = df.index.shift(-1, "M").shift(1, "D")
+            if f == "ME":
+                df.index = df.index.shift(-1, "ME").shift(1, "D")
                 df = df / 1000  # GWh->TWh
             df.index = df.index.astype("O")
             return df
@@ -133,7 +133,7 @@ class NYISOVis:
         Parameters
         ----------
         f: str
-            Frequency of graph to generate (daily ('D') and monthly ('M') recommended)
+            Frequency of graph to generate (daily ('D') and monthly ("ME") recommended)
         """
         
         tables = self.tables_energy_generation(f=f) #Data
@@ -146,7 +146,7 @@ class NYISOVis:
         
         ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.05), ncol=4, fancybox=True, shadow=False) #Legend
         #Axes
-        if f == 'M':
+        if f == "ME":
             ylabel = 'Energy [TWh]'
         else:
             ylabel = 'Energy [GWh]'
@@ -173,7 +173,7 @@ class NYISOVis:
         Parameters
         ----------
         f: str
-            Frequency of graph to generate (daily ('D') and monthly ('M') recommended)
+            Frequency of graph to generate (daily ('D') and monthly ("ME") recommended)
 
         Returns
         -------
@@ -195,7 +195,7 @@ class NYISOVis:
         Parameters
         ----------
         f: str
-            Frequency of graph to generate (daily ('D') and monthly ('M') recommended)
+            Frequency of graph to generate (daily ('D') and monthly ("ME") recommended)
 
         """
         tables = self.tables_carbon_free_timeseries(f=f) # Data
@@ -332,8 +332,9 @@ class NYISOVis:
         Inspired by: Google ESIG Presentation 10/13/2020
         """
         
-        tables = self.tables_carbon_free_timeseries(f='H') # Data
-        df = pd.DataFrame(tables['df'].sum(axis='columns')) #sum to get total carbon-free percent
+        tables = self.tables_carbon_free_timeseries(f="h") # Data
+        df = pd.DataFrame(tables['df'].sum(axis='columns')) #sum to get total carbon-free percent'
+        df.index = pd.to_datetime(df.index)
         df['Date'] = df.index.date
         df['Hour'] = df.index.hour
         df = df.pivot_table(index='Hour', columns='Date', values=0) #TODO: Check: duplicate index warning with regular pivot, likely because in EST TIME.
@@ -374,8 +375,9 @@ class NYISOVis:
         """Creates a figure depicting 24 hour clock of the carbon-free operation of the average day.
         Inspired by: Google ESIG Presentation 10/13/2020
         """
-        tables = self.tables_carbon_free_timeseries(f='H') # Data
+        tables = self.tables_carbon_free_timeseries(f="h") # Data
         df = pd.DataFrame(tables['df'].sum(axis='columns')) #sum for total carbon-free %
+        df.index = pd.to_datetime(df.index)
         df = df.groupby(df.index.hour).mean().sort_index(ascending=False)
         
         # Plot
@@ -415,7 +417,7 @@ class NYISOVis:
         ax.set_title(f'Decarbonization Clock ({self.year})', y=0.91)
         
         # Save
-        file = pl.Path(self.out_dir,f'{self.year}_decarbonization_clock.png')
+        file = pl.Path(self.out_dir,f'{self.year}_pd.decarbonization_clock.png')
         fig.savefig(file, bbox_inches='tight', transparent=True)
     
     def fig_demand_pdf(self, cumulative=False):
@@ -478,7 +480,7 @@ class NYISOVis:
         fig.savefig(file, bbox_inches='tight', transparent=True)
         
     def fig_price_difference_pdf(self, cumulative = False):
-        rt_price = table_load_weighted_price(year=self.year, rt=True).resample("H").mean() #$/MWh
+        rt_price = table_load_weighted_price(year=self.year, rt=True).resample("h").mean() #$/MWh
         da_price = table_load_weighted_price(year=self.year, rt=False) #$/MWh
         df = da_price - rt_price
         ax_kwargs = {"title":f'State-wide Average Baseload DA-RT Energy Price Difference\n Probability Distribution ({self.year})',
@@ -530,7 +532,7 @@ def pdf(df, ax_kwargs, histplot_kwargs):
 def fix_legend(ax, **kws):
     """https://github.com/mwaskom/seaborn/issues/2280"""
     old_legend = ax.legend_
-    handles = old_legend.legendHandles
+    handles = old_legend.legend_handles
     labels = [t.get_text() for t in old_legend.get_texts()]
     #title = old_legend.get_title().get_text()
     ax.legend(handles, labels, **kws)
@@ -541,7 +543,7 @@ def basic_plots(nyisovis_kwa):
     nv.fig_carbon_free_year()
     nv.fig_decarbonization_heatmap()
     nv.fig_decarbonization_clock()
-    for f in ['D','M']:
+    for f in ['D',"ME"]:
         nv.fig_energy_generation(f=f)
         nv.fig_carbon_free_timeseries(f=f)
             
@@ -555,7 +557,7 @@ def statistical_plots(nyisovis_kwa):
             nv.fig_price_difference_pdf(cumulative=c)
 
 # Figure Configuration
-plt.style.use(['seaborn-whitegrid'])
+plt.style.use(['seaborn-v0_8-whitegrid'])
 plt.rcParams.update({'font.weight': 'bold',
                      'font.size': 8,
                      'axes.labelweight': 'bold',

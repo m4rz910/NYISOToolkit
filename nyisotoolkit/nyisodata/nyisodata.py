@@ -84,7 +84,7 @@ class NYISOData:
         self.reconstruct = reconstruct
         self.create_csv = create_csv
         self.arg_validation()
-        
+         
         self.curr_date = datetime.now(tz=pytz.timezone('US/Eastern'))
         self.download_dir = pl.Path(STORAGE_DIR, 'raw_datafiles', self.dataset, self.year)
         self.dataset_details = utils.fetch_dataset_url_map(self.dataset)
@@ -133,7 +133,7 @@ class NYISOData:
         # Determine expected timestamps for dataset
         self.curr_date = datetime.now(tz=pytz.timezone("US/Eastern"))  # update current time after download
         start, end = utils.fetch_ts_start_end(
-            self.curr_date, self.year, self.dataset_details.f
+             self.curr_date, self.year, self.dataset_details.f
         )
         timestamps = pd.date_range(
             start, end, freq=self.dataset_details.f, tz="US/Eastern"
@@ -146,7 +146,7 @@ class NYISOData:
             return  # skip the rest
         else:
             if self.dataset in ['lbmp_dam_h_refbus','lbmp_rt_h_refbus']:
-                frames = [(pd.read_csv(file,header=None)
+                 frames = [(pd.read_csv(file,header=None)
                            .rename(columns={0:'Time Stamp', 1:'Name', 2:'ID?', 3:'Marginal Cost of Energy', 4:'Loss?', 5:'Cong?'})
                            .set_index('Time Stamp')
                            .drop(columns='Name') # theres only the reference bus and we cant
@@ -164,18 +164,25 @@ class NYISOData:
                 elif self.dataset_details.col is None:  # there is no need to pivot
                     df = df.tz_localize("US/Eastern", ambiguous="infer")
                 df = df.sort_index(axis="index").tz_convert("UTC")  # Convert to UTC so that pivot can work without throwing error for duplicate indices
-                
-                if ("Time Zone" in df.columns):  # make stacked columns
-                    df = df.pivot(
-                        columns=self.dataset_details.col,
-                        values=self.dataset_details.val_col,
-                    )
+                if "Time Zone" in df.columns:  # make stacked columns
+                    df.drop(columns=['Time Zone','PTID'],errors='ignore', inplace=True)
+                    if self.dataset_details.val_col is None:
+                            df = df.pivot(
+                            columns=self.dataset_details.col
+                        )
+                    else:
+                        df = df.pivot(
+                            columns=self.dataset_details.col,
+                            values=self.dataset_details.val_col,
+                        )
                 df = df.resample(self.dataset_details.f).mean()
                 df = utils.check_and_interpolate_nans(df)
             else:  # When there is no timezone column and there is 'stacked' data ()
                 frames = []
                 for ctype, subdf in df.groupby(by=self.dataset_details.col):
-                    subdf = subdf.tz_localize("US/Eastern", ambiguous="infer").tz_convert("UTC")
+                    subdf = subdf.tz_localize(
+                        "US/Eastern", ambiguous="infer"
+                    ).tz_convert("UTC")
                     subdf = subdf.resample(self.dataset_details.f).mean(numeric_only=True)
                     subdf = utils.check_and_interpolate_nans(subdf)
                     subdf.loc[:, self.dataset_details.col] = ctype
@@ -189,9 +196,9 @@ class NYISOData:
                     )
 
             df = self.dataset_adjustments(df) # Dataset specific adjustments
-
+            df.sort_index(inplace=True) # sort index such that slicing works
             df = df.tz_convert("US/Eastern").loc[start:end]  # Convert back to US/Eastern to select time
-
+ 
             # Checks
             assert timestamps[~timestamps.isin(df.index)].empty, f"Index is missing data! {timestamps[~timestamps.isin(df.index)]}"
             assert (~df.isnull().values.any()),"NaNs Found! Resampling and interpolation should have handled this."
@@ -250,12 +257,12 @@ def table_load_weighted_price(year, rt):
     """Calculates the state-wide average energy price by weighting the zonal prices by their load."""
     if rt:
         load_df = (NYISOData(dataset="load_5m", year=year).df*1/12).tz_convert('US/Eastern') # MW->MWh
-        lbmp_df = NYISOData(dataset="lbmp_rt_5m", year=year).df.tz_convert('US/Eastern').pivot(columns="Name", values="LBMP ($/MWHr)") #$/MWH
+        lbmp_df = NYISOData(dataset="lbmp_rt_5m", year=year).df.tz_convert('US/Eastern')["LBMP ($/MWHr)"] #$/MWH
         lbmp_df = lbmp_df.loc[load_df.index,:] #for current year load reporting lags lbmp
     else:
-        # Note: Load forecast is used
+         # Note: Load forecast is used
         load_df = NYISOData(dataset="load_forecast_h", year=year).df.tz_convert('US/Eastern') # MW=MWh 
-        lbmp_df = NYISOData(dataset="lbmp_dam_h", year=year).df.tz_convert('US/Eastern').pivot(columns="Name", values="LBMP ($/MWHr)") #$/MWH
+        lbmp_df = NYISOData(dataset="lbmp_dam_h", year=year).df.tz_convert('US/Eastern')["LBMP ($/MWHr)"] #$/MWH
         load_df = load_df.loc[lbmp_df.index,:] # load forecast leads lbmp, so shorten it
     
     assert load_df.index.isin(lbmp_df.index).any(), "Indices are not the same"
