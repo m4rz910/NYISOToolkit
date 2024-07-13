@@ -2,7 +2,7 @@
 
 A package for accessing power system data (`NYISOData`), generating statistics (`NYISOStat`), and creating visualizations (`NYISOVis`) from the [New York Independent System Operator (NYISO)](https://www.nyiso.com/).
 
-Check out the [NYISOToolkit Web App!](http://viosimos.com/nyisotoolkit/)
+Check out the [NYISOToolkit Website!](http://nyisotoolkit.com/)
 
 ## How to Install
 
