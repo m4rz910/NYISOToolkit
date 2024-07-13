@@ -158,10 +158,16 @@ class NYISOData:
                     df = df.tz_localize("US/Eastern", ambiguous="infer")
                 df = df.sort_index(axis="index").tz_convert("UTC")  # Convert to UTC so that pivot can work without throwing error for duplicate indices
                 if "Time Zone" in df.columns:  # make stacked columns
-                    df = df.pivot(
-                        columns=self.dataset_details.col,
-                        values=self.dataset_details.val_col,
-                    )
+                    df.drop(columns=['Time Zone','PTID'],errors='ignore', inplace=True)
+                    if self.dataset_details.val_col is None:
+                            df = df.pivot(
+                            columns=self.dataset_details.col
+                        )
+                    else:
+                        df = df.pivot(
+                            columns=self.dataset_details.col,
+                            values=self.dataset_details.val_col,
+                        )
                 df = df.resample(self.dataset_details.f).mean()
                 df = utils.check_and_interpolate_nans(df)
             else:  # When there is no timezone column and there is 'stacked' data
@@ -170,7 +176,7 @@ class NYISOData:
                     subdf = subdf.tz_localize(
                         "US/Eastern", ambiguous="infer"
                     ).tz_convert("UTC")
-                    subdf = subdf.resample(self.dataset_details.f).mean()
+                    subdf = subdf.resample(self.dataset_details.f).mean(numeric_only=True)
                     subdf = utils.check_and_interpolate_nans(subdf)
                     subdf.loc[:, self.dataset_details.col] = ctype
                     frames.append(subdf)
@@ -180,7 +186,7 @@ class NYISOData:
                     print(f"Warning: There seems to be underlying missing data.\n{df[self.dataset_details.col].value_counts()}")
 
             df = self.dataset_adjustments(df) # Dataset specific adjustments
-
+            df.sort_index(inplace=True) # sort index such that slicing works
             df = df.tz_convert("US/Eastern").loc[start:end]  # Convert back to US/Eastern to select time
 
             # Checks

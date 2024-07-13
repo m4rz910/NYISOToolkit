@@ -3,7 +3,7 @@ load_5m:
   url:
     pre: pal
     post: pal_csv.zip
-  f: 5T
+  f: 5min
   col: Name
   val_col: Load
 
@@ -12,7 +12,7 @@ load_h:
   url:
     pre: palIntegrated
     post: palIntegrated_csv.zip
-  f: H
+  f: h
   col: Name
   val_col: Integrated Load
 
@@ -21,7 +21,7 @@ load_forecast_h:
   url:
     pre: isolf
     post: isolf_csv.zip
-  f: H
+  f: h
   col: # None
   val_col: # None
 
@@ -30,7 +30,7 @@ fuel_mix_5m:
   url:
     pre: rtfuelmix
     post: rtfuelmix_csv.zip
-  f: 5T
+  f: 5min
   col: Fuel Category
   val_col: Gen MW
 
@@ -39,7 +39,7 @@ interface_flows_5m:
   url:
     pre: ExternalLimitsFlows
     post: ExternalLimitsFlows_csv.zip
-  f: 5T
+  f: 5min
   col: Interface Name
   val_col: Flow (MWH)
 
@@ -48,7 +48,7 @@ lbmp_dam_h:
   url:
     pre: damlbmp
     post: damlbmp_zone_csv.zip
-  f: H
+  f: h
   col: Name
   val_col: # None
 
@@ -57,7 +57,7 @@ lbmp_rt_5m:
   url:
     pre: realtime
     post: realtime_zone_csv.zip
-  f: 5T
+  f: 5min
   col: Name
   val_col:  # None
 
@@ -66,7 +66,7 @@ asp_rt:
   url:
     pre: rtasp
     post: rtasp_csv.zip
-  f: 5T
+  f: 5min
   col: Name
   val_col:  # None
 
@@ -75,6 +75,6 @@ asp_dam:
   url:
     pre: damasp
     post: damasp_csv.zip
-  f: H
+  f: h
   col: Name
   val_col:  # None

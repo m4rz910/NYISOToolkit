@@ -90,7 +90,7 @@ def fetch_ts_start_end(cur_date, request_year, frequency):
     start = f"{request_year}-01-01 00:00:00"
     end = None
 
-    if frequency not in ["5T", "H"]:
+    if frequency not in ["5min", "h"]:
         raise NotImplementedError(
             "Data frequency chosen is not supported"
         )  # TODO: get dataset
@@ -103,9 +103,9 @@ def fetch_ts_start_end(cur_date, request_year, frequency):
             fmt
         )  # todo: get latest minute info
     elif request_year < cur_date.year:  # get full
-        if frequency == "5T":
+        if frequency == "5min":
             end = f"{request_year}-12-31 23:55:00"
-        elif frequency == "H":
+        elif frequency == "h":
             end = f"{request_year}-12-31 23:00:00"
 
     if end is None:
