@@ -2,7 +2,7 @@
 
 A package for accessing power system data (`NYISOData`), generating statistics (`NYISOStat`), and creating visualizations (`NYISOVis`) from the [New York Independent System Operator (NYISO)](https://www.nyiso.com/).
 
-Check out the [NYISOToolkit Website!](www.nyisotoolkit.com/)
+Check out the [NYISOToolkit Website!](http://nyisotoolkit.com/)
 
 ## How to Install
 
@@ -124,7 +124,7 @@ PJM LINDEN VFT | External | `SCH - PJM_VFT`
 * Frequency: 5-min
 
 ## NYISOVis
-There are several visualizations currently supported - browse them on the [NYISOToolkit Web App](nyisotoolkit.com/) or in the nyisotoolkit/nyisovis/visualizations folder. The visualizations are focused on communicating New York's status toward achieving the power sector decarbonization goals outlined by the Climate Leadership and Community Protection Act (CLCPA). 
+There are several visualizations currently supported - browse them on the [NYISOToolkit Web App](http://nyisotoolkit.com/) or in the nyisotoolkit/nyisovis/visualizations folder. The visualizations are focused on communicating New York's status toward achieving the power sector decarbonization goals outlined by the Climate Leadership and Community Protection Act (CLCPA). 
 
 > No later than [June 13, 2021], the commission shall establish a program to require that:
 >
