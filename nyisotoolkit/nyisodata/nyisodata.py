@@ -95,7 +95,7 @@ class NYISOData:
     def arg_validation(self):
         """Checks if dataset and year is available"""
         if self.dataset not in SUPPORTED_DATASETS:
-            raise Exception(f"{self.dataset} is not the name of a supported dataset! Supported datasets include:\# %%{SUPPORTED_DATASETS}")
+            raise Exception(f"{self.dataset} is not the name of a supported dataset! Supported datasets include:{SUPPORTED_DATASETS}")
         elif (int(self.year)<=2017) or (int(self.year)>utils.current_year()):
             raise Exception(f"{self.year} is not supported. Only 2018-{utils.current_year()} is supported.")
 

@@ -165,7 +165,7 @@ class NYISOVis:
         
         #Save
         file = pl.Path(self.out_dir, f'{self.year}_energy_generation_{f}.png')
-        fig.savefig(file, bbox_inches='tight', transparent=True)
+        fig.savefig(file, bbox_inches='tight', transparent=False)
 
     def tables_carbon_free_timeseries(self, f='D'):
         """Gathers datasets needed to produce fig_carbon_free_timeseries
@@ -258,7 +258,7 @@ class NYISOVis:
         
         #Save
         file = pl.Path(self.out_dir, f'{self.year}_carbon_free_timeseries_{f}.png')
-        fig.savefig(file, bbox_inches='tight', transparent=True)
+        fig.savefig(file, bbox_inches='tight', transparent=False)
         return tables
             
     def fig_carbon_free_year(self):
@@ -325,7 +325,7 @@ class NYISOVis:
         
         #Save
         file = pl.Path(self.out_dir,f'{self.year}_carbon_free_year.png')
-        fig.savefig(file, bbox_inches='tight', transparent=True)
+        fig.savefig(file, bbox_inches='tight', transparent=False)
         
     def fig_decarbonization_heatmap(self):
         """Creates a figure depicting an overview of the seasonal and daily carbon-free operation.
@@ -369,7 +369,7 @@ class NYISOVis:
                 
         #Save
         file = pl.Path(self.out_dir,f'{self.year}_decarbonization_heatmap.png')
-        fig.savefig(file, bbox_inches='tight', transparent=True)
+        fig.savefig(file, bbox_inches='tight', transparent=False)
 
     def fig_decarbonization_clock(self):
         """Creates a figure depicting 24 hour clock of the carbon-free operation of the average day.
@@ -418,7 +418,7 @@ class NYISOVis:
         
         # Save
         file = pl.Path(self.out_dir,f'{self.year}_decarbonization_clock.png')
-        fig.savefig(file, bbox_inches='tight', transparent=True)
+        fig.savefig(file, bbox_inches='tight', transparent=False)
     
     def fig_demand_pdf(self, cumulative=False):
         """Creates a figure of the year's demand probability density function."""
@@ -437,7 +437,7 @@ class NYISOVis:
             file = pl.Path(self.out_dir,f'{self.year}_demand_cumulative_pdf.png')
         else:
             file = pl.Path(self.out_dir,f'{self.year}_demand_pdf.png')
-        fig.savefig(file, bbox_inches='tight', transparent=True)
+        fig.savefig(file, bbox_inches='tight', transparent=False)
     
     def fig_demand_forecast_error(self, cumulative=False):
         load = NYISOData(dataset="load_h", year=self.year).df.tz_convert('US/Eastern')["NYCA"] #MW
@@ -458,7 +458,7 @@ class NYISOVis:
             file = pl.Path(self.out_dir,f'{self.year}_demand_forecast_error_cumulative_pdf.png')
         else:
             file = pl.Path(self.out_dir,f'{self.year}_demand_forecast_error_pdf.png')
-        fig.savefig(file, bbox_inches='tight', transparent=True)
+        fig.savefig(file, bbox_inches='tight', transparent=False)
 
     def fig_price_pdf(self, rt, cumulative = False):
         """Creates a figure of the state-wide average energy price probability distribution.
@@ -477,7 +477,7 @@ class NYISOVis:
             file = pl.Path(self.out_dir,f'{self.year}_{da_rt}_price_cumulative_pdf.png')
         else:
             file = pl.Path(self.out_dir,f'{self.year}_{da_rt}_price_pdf.png')
-        fig.savefig(file, bbox_inches='tight', transparent=True)
+        fig.savefig(file, bbox_inches='tight', transparent=False)
         
     def fig_price_difference_pdf(self, cumulative = False):
         rt_price = table_load_weighted_price(year=self.year, rt=True).resample("h").mean() #$/MWh
@@ -496,7 +496,7 @@ class NYISOVis:
             file = pl.Path(self.out_dir,f'{self.year}_price_difference_cumulative_pdf.png')
         else:
             file = pl.Path(self.out_dir,f'{self.year}_price_difference_pdf.png')
-        fig.savefig(file, bbox_inches='tight', transparent=True)
+        fig.savefig(file, bbox_inches='tight', transparent=False)
     
     def fig_carbon_free_years(self):
         """Todo: stacked area chart over time using nyisostat annual summary"""
