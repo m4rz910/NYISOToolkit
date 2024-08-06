@@ -23,7 +23,7 @@ setuptools.setup(
     },
     install_requires=['pandas==2.2.2',
                       'matplotlib==3.9.1',
-                      'scipy==1.14.0'
+                      'scipy==1.14.0',
                       'seaborn==0.13.2',
                       'pytest==8.2.2',
                       'pytz==2024.1',
