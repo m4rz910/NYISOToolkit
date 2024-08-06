@@ -250,7 +250,7 @@ class NYISOVis:
                   ncol=5, fancybox=True, shadow=False)
         #Axes
         ax.set(title=f'Carbon-free Time Series ({self.year})',
-               xlabel=None, ylabel='% of Demand Served by Carbon-Free Energy',
+               xlabel=None, ylabel='% of Demand \nServed by Carbon-Free Energy',
                xlim=[tables['df'].index[0], tables['df'].index[-1]], ylim=[0, 100])
         ax.xaxis.set_major_formatter(mdates.DateFormatter('%b'))
         plt.setp(ax.get_xticklabels(), rotation=0, horizontalalignment='center')
