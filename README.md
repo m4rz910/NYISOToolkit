@@ -4,6 +4,8 @@ A package for accessing power system data (`NYISOData`), generating statistics (
 
 Check out the [NYISOToolkit Website!](http://nyisotoolkit.com/)
 
+![CLCPA](nyisotoolkit/nyisovis/visualizations/2023_carbon_free_timeseries_D.png)
+
 ## How to Install
 
 ```python
