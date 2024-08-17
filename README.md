@@ -15,13 +15,13 @@ pip install git+https://github.com/m4rz910/NYISOToolkit#egg=nyisotoolkit
 **Example:**
 ```python
 from nyisotoolkit import NYISOData, NYISOStat, NYISOVis
-df = NYISOData(dataset='load_h', year='2019').df # year argument in local time, but returns dataset in UTC
+df = NYISOData(dataset='load_h', year='2024').df # year argument in local time, but returns dataset in UTC
 
 #If you need to work with data in local time, then convert time zone
 df = df.tz_convert('US/Eastern')
 
 #Construct datasets for certain years
-years = ['2013','2019','2020']
+years = range(2022,2024)
 datasets = ['load_h','interface_flows_5m']
 NYISOData.construct_databases(years=years, datasets=datasets, redownload=True, reconstruct=True, create_csvs=False)
 ```
@@ -41,6 +41,7 @@ Dataset Name | Resolution | Description
 `lbmp_rt_h_refbus` | hourly | time weighted average rt reference bus marginal cost of energy
 `asp_rt` | 5-min | real-time zonal ancillary service prices
 `asp_dam` | hourly | day-ahead zonal ancillary service prices
+`capacity_prices` | monthly | spot, monthly, and strip capacity prices
 
 All datasets:
 
@@ -123,6 +124,11 @@ PJM LINDEN VFT | External | `SCH - PJM_VFT`
 * Units: Price [$/MWh]
 * Frequency: 5-min
 
+#### Capacity Prices (`capacity_prices`)
+
+* Units: Price [$/kW-mo]
+* Frequency: monthly
+
 ## NYISOVis
 There are several visualizations currently supported - browse them on the [NYISOToolkit Web App](http://nyisotoolkit.com/) or in the nyisotoolkit/nyisovis/visualizations folder. The visualizations are focused on communicating New York's status toward achieving the power sector decarbonization goals outlined by the Climate Leadership and Community Protection Act (CLCPA). 
 
@@ -137,7 +143,7 @@ There are several visualizations currently supported - browse them on the [NYISO
 
 ```python
 from nyisotoolkit import NYISOData, NYISOStat, NYISOVis
-nv = NYISOVis(year='2019') #figures saved in nyisotoolkit/nyisovis/visualization folder by default.  
+nv = NYISOVis(year='2021') #figures saved in nyisotoolkit/nyisovis/visualization folder by default.  
 nv.fig_carbon_free_timeseries(f='D')  # daily (D) or monthy (M) frequency is recommended
 print(f"Figures saved by default to: {nv.out_dir} \nYou can change this by passing a pathlib object to the out_dir parameter in the NYISOVis object initialization.")
 ```

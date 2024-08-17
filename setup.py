@@ -30,5 +30,6 @@ setuptools.setup(
                       'requests==2.32.0',
                       'pyyaml==6.0.1',
                       'ipykernel',
+                      'openpyxl==3.1.5'
                       ]
 )
