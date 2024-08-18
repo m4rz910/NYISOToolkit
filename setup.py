@@ -11,7 +11,7 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     url="https://github.com/m4rz910/NYISOToolkit",
     author="m4rz910",
-    author_email="viosimosllc@gmail.com",
+    author_email="tzavelisz@gmail.com",
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
