@@ -8,16 +8,14 @@ from nyisotoolkit.nyisodata import STORAGE_DIR
 class NYISOCapacity:
     def __init__(self, date=pd.Timestamp.now()) -> None:
         """
-        
         Arguments:
             date (pandas.Timestamp): date that will be used to pull latest capacity
                 report (will refer to month and year)
-        
         """
         self.date = pd.to_datetime(date)
         self.download_dir = Path(STORAGE_DIR, 'raw_datafiles', 'capacity_reports')
         self.download_dir.mkdir(parents=True,exist_ok=True)
-        self.report_name = f"ICAP-Market-Report-{self.date.month_name()}-{self.date.year}.xlsx" # set in get_raw data
+        self.report_name = f"ICAP-Market-Report-{self.date.month_name()}-{self.date.year}.xlsx"
 
     def get_url(self):
          
@@ -71,11 +69,6 @@ class NYISOCapacity:
         return df
     
     def summary_table(self):
-        """Pull the most recent capacity market report's market clearing prices
-
-        Returns:
-            a DataFrame of monthly capacity prices (all three auctions) for each of the four capacity localities within NYISO
-        """
         if not Path(self.download_dir, self.report_name).exists():
             self.get_raw_data(self)
             
@@ -85,7 +78,22 @@ class NYISOCapacity:
                   inplace=True)
         df.set_index("", inplace=True)
         df.index.name = 'datetime'
+        df = df.apply(pd.to_numeric, errors='coerce').fillna(0)
         return df
 
+    def ucap_table(self):
+        if not Path(self.download_dir, self.report_name).exists():
+            self.get_raw_data(self)
+            
+        df = pd.read_excel(Path(self.download_dir, self.report_name),
+                           sheet_name="UCAP Table", header=[0, 1]).iloc[:,:17]
+        df.rename(columns={"Unnamed: 0_level_0": "", "Date": ""},
+                  inplace=True)
+        df.set_index("", inplace=True)
+        df.index.name = 'datetime'
+        
+        df = df.apply(pd.to_numeric, errors='coerce').fillna(0)
+        return df
+    
 if __name__ == "__main__":
     NYISOCapacity(date=pd.Timestamp.now())
