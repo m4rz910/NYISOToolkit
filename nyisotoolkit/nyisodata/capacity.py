@@ -16,6 +16,9 @@ class NYISOCapacity:
         self.download_dir = Path(STORAGE_DIR, 'raw_datafiles', 'capacity_reports')
         self.download_dir.mkdir(parents=True,exist_ok=True)
         self.report_name = f"ICAP-Market-Report-{self.date.month_name()}-{self.date.year}.xlsx"
+        
+        self.exists = None # set in get_raw_data
+        self.get_raw_data()
 
     def get_url(self):
          
@@ -48,7 +51,9 @@ class NYISOCapacity:
         if r.ok:
             with open(self.report_file, 'wb') as file:
                 file.write(r.content)
+            self.exists = True
         else:
+            self.exists = False
             print(f"Warning: Request failed for {url} with status: {r.status_code}")  # TODO: log this
             
     def prices(self):
@@ -96,4 +101,5 @@ class NYISOCapacity:
         return df
     
 if __name__ == "__main__":
-    NYISOCapacity(date=pd.Timestamp.now())
+    o = NYISOCapacity(date='09/01/2024')
+    o
