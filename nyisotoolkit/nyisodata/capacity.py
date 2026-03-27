@@ -41,6 +41,7 @@ class NYISOCapacity:
             2023: 35397361,
             2024: 42146126,
             2025: 48997190,
+            2026: 56195933,
         }
         
         year_code = year_to_year_code.get(self.date.year, None)
