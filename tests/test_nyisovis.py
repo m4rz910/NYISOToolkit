@@ -25,4 +25,4 @@ def test_statistical_plots():
     
 if __name__ == "__main__":
     test_basic_plots()
-    test_statistical_plots()
+    #test_statistical_plots()

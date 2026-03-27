@@ -4,6 +4,8 @@ A package for accessing power system data (`NYISOData`), generating statistics (
 
 Check out the [NYISOToolkit Website!](http://nyisotoolkit.com/)
 
+![CLCPA](nyisotoolkit/nyisovis/visualizations/2023_carbon_free_timeseries_D.png)
+
 ## How to Install
 
 ```python
@@ -147,4 +149,4 @@ nv = NYISOVis(year='2021') #figures saved in nyisotoolkit/nyisovis/visualization
 nv.fig_carbon_free_timeseries(f='D')  # daily (D) or monthy (M) frequency is recommended
 print(f"Figures saved by default to: {nv.out_dir} \nYou can change this by passing a pathlib object to the out_dir parameter in the NYISOVis object initialization.")
 ```
-![CLCPA](nyisotoolkit/nyisovis/visualizations/2021_carbon_free_timeseries_D.png)
+![CLCPA](nyisotoolkit/nyisovis/visualizations/2023_carbon_free_timeseries_D.png)
