@@ -1,5 +1,4 @@
-from nyisotoolkit import construct_databases, SUPPORTED_DATASETS, NYISOData
-
+from nyisotoolkit import construct_databases, SUPPORTED_DATASETS
 
 def test_datasets(years=[2023,2024]):
     datasets = SUPPORTED_DATASETS

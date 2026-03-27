@@ -11,7 +11,7 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     url="https://github.com/m4rz910/NYISOToolkit",
     author="m4rz910",
-    author_email="viosimosllc@gmail.com",
+    author_email="tzavelisz@gmail.com",
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
@@ -30,5 +30,6 @@ setuptools.setup(
                       'requests==2.32.0',
                       'pyyaml==6.0.1',
                       'ipykernel',
+                      'openpyxl==3.1.5'
                       ]
 )

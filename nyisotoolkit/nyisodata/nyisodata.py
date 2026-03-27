@@ -1,5 +1,4 @@
 import pathlib as pl
-
 import pandas as pd
 import pytz
 import requests
@@ -7,12 +6,7 @@ import zipfile
 from datetime import datetime
 import io
 
-from . import utils
-
-# from . import DataQuality
-
-STORAGE_DIR = pl.Path(pl.Path(__file__).resolve().parent, 'storage')
-DATABASE_DIR = pl.Path(STORAGE_DIR, 'databases')
+from nyisotoolkit.nyisodata import utils, STORAGE_DIR, DATABASE_DIR
 
 class NYISOData:
     """A class used to download and construct a local database from the NYISO.
