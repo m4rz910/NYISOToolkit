@@ -27,7 +27,7 @@ setuptools.setup(
                       'seaborn==0.13.2',
                       'pytest==8.2.2',
                       'pytz==2024.1',
-                      'requests==2.32.0',
+                      'requests==2.33.0',
                       'pyyaml==6.0.1',
                       'ipykernel',
                       'openpyxl==3.1.5'
