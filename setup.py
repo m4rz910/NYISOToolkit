@@ -25,7 +25,7 @@ setuptools.setup(
                       'matplotlib==3.9.1',
                       'scipy==1.14.0',
                       'seaborn==0.13.2',
-                      'pytest==8.2.2',
+                      'pytest==9.0.3',
                       'pytz==2024.1',
                       'requests==2.32.0',
                       'pyyaml==6.0.1',
