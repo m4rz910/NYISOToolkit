@@ -3,9 +3,11 @@
 import io
 import os
 import time
+import zipfile
 import logging
 from datetime import datetime
 
+import requests
 import pandas as pd
 import psycopg2
 
@@ -28,7 +30,14 @@ YEARS = [int(y.strip()) for y in os.environ.get(
     "SYNC_YEARS", "2025,2026").split(",") if y.strip()]
 SYNC_INTERVAL_SECONDS = int(os.environ.get("SYNC_INTERVAL_SECONDS", "3600"))
 SYNC_CAPACITY_PRICES = os.environ.get("SYNC_CAPACITY_PRICES", "true").lower() == "true"
+SYNC_SYSTEM_EVENTS = os.environ.get("SYNC_SYSTEM_EVENTS", "true").lower() == "true"
 CURRENT_YEAR = datetime.now().year
+
+# NYISO's system-state/grid-alert log (thunderstorm alerts, reserve pick-ups,
+# alert-state transitions), same mis.nyiso.com CSV infra NYISOData itself
+# uses -- not part of NYISOData.SUPPORTED_DATASETS since it's text events,
+# not a numeric time series.
+EVENTS_URL = "http://mis.nyiso.com/public/csv/RealTimeEvents/{}01RealTimeEvents_csv.zip"
 
 # ---- Per-dataset column -> (region, series) semantics -------------------
 # "col"        -> use the (single-level) column value directly
@@ -71,6 +80,15 @@ CREATE INDEX IF NOT EXISTS idx_timeseries_dataset_time
     ON timeseries (dataset, time DESC);
 CREATE INDEX IF NOT EXISTS idx_timeseries_region_series_time
     ON timeseries (region, series, time DESC);
+
+CREATE TABLE IF NOT EXISTS system_events (
+    time    TIMESTAMPTZ NOT NULL,
+    message TEXT        NOT NULL,
+    PRIMARY KEY (time, message)
+);
+
+CREATE INDEX IF NOT EXISTS idx_system_events_time
+    ON system_events (time DESC);
 """
 
 
@@ -148,6 +166,62 @@ def upsert_long_df(conn, long_df: pd.DataFrame):
             DO UPDATE SET value = EXCLUDED.value;
         """)
     conn.commit()
+
+
+def upsert_events(conn, events: pd.DataFrame):
+    if events.empty:
+        return
+    buf = io.StringIO()
+    events.to_csv(buf, index=False, header=False)
+    buf.seek(0)
+    with conn.cursor() as cur:
+        cur.execute("""
+            CREATE TEMP TABLE staging_events (
+                time TIMESTAMPTZ, message TEXT
+            ) ON COMMIT DROP;
+        """)
+        cur.copy_expert(
+            "COPY staging_events (time, message) FROM STDIN WITH CSV",
+            buf,
+        )
+        cur.execute("""
+            INSERT INTO system_events (time, message)
+            SELECT time, message FROM staging_events
+            ON CONFLICT (time, message) DO NOTHING;
+        """)
+    conn.commit()
+
+
+def sync_system_events(conn, year: int):
+    log.info("Fetching system events %s", year)
+    now = datetime.now()
+    months = range(1, 13) if year < now.year else range(1, now.month + 1)
+    frames = []
+    for month in months:
+        url = EVENTS_URL.format(f"{year}{month:02d}")
+        try:
+            r = requests.get(url, timeout=30)
+            if not r.ok:
+                continue
+            z = zipfile.ZipFile(io.BytesIO(r.content))
+            for name in z.namelist():
+                with z.open(name) as f:
+                    day_df = pd.read_csv(f)
+                if day_df.empty:
+                    continue
+                day_df.columns = ["time", "message"]
+                frames.append(day_df)
+        except Exception:
+            log.exception("Failed to fetch system events %s-%02d", year, month)
+    if not frames:
+        return
+    events = pd.concat(frames, ignore_index=True)
+    events["time"] = pd.to_datetime(events["time"]).dt.tz_localize(
+        "US/Eastern", ambiguous="NaT", nonexistent="shift_forward")
+    events = events.dropna(subset=["time"])
+    events["time"] = events["time"].dt.tz_convert("UTC")
+    upsert_events(conn, events)
+    log.info("Upserted %d system events for %s", len(events), year)
 
 
 def sync_dataset(conn, dataset: str, year: int):
@@ -229,6 +303,9 @@ def run_once():
                 sync_dataset(conn, dataset, year)
         if SYNC_CAPACITY_PRICES:
             sync_capacity_prices(conn)
+        if SYNC_SYSTEM_EVENTS:
+            for year in YEARS:
+                sync_system_events(conn, year)
     finally:
         conn.close()
 
