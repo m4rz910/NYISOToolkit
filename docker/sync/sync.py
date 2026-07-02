@@ -98,22 +98,30 @@ def _resolve(spec, col):
     raise ValueError(f"Unknown melt spec: {spec}")
 
 
-def melt_dataframe(df: pd.DataFrame, dataset: str) -> pd.DataFrame:
+COLUMN_BATCH_SIZE = 20  # bounds peak memory regardless of dataset width (e.g. interface_flows_5m)
+
+
+def melt_dataframe_chunks(df: pd.DataFrame, dataset: str):
     """Turn a NYISOData wide dataframe (UTC tz-aware index) into
-    long rows: time, dataset, region, series, value."""
+    long rows: time, dataset, region, series, value -- yielded in
+    column batches so wide datasets don't require materializing the
+    whole long-format frame (+ CSV buffer) in memory at once."""
     profile = MELT_PROFILES[dataset]
     df = df.copy()
     df.index.name = "time"
-    frames = []
-    for col in df.columns:
-        s = df[col].rename("value").reset_index()
-        s["region"] = _resolve(profile["region"], col)
-        s["series"] = _resolve(profile["series"], col)
-        frames.append(s)
-    long_df = pd.concat(frames, ignore_index=True)
-    long_df["dataset"] = dataset
-    long_df = long_df.dropna(subset=["value"])
-    return long_df[["time", "dataset", "region", "series", "value"]]
+    cols = list(df.columns)
+    for i in range(0, len(cols), COLUMN_BATCH_SIZE):
+        batch_cols = cols[i:i + COLUMN_BATCH_SIZE]
+        frames = []
+        for col in batch_cols:
+            s = df[col].rename("value").reset_index()
+            s["region"] = _resolve(profile["region"], col)
+            s["series"] = _resolve(profile["series"], col)
+            frames.append(s)
+        long_df = pd.concat(frames, ignore_index=True)
+        long_df["dataset"] = dataset
+        long_df = long_df.dropna(subset=["value"])
+        yield long_df[["time", "dataset", "region", "series", "value"]]
 
 
 def upsert_long_df(conn, long_df: pd.DataFrame):
@@ -151,9 +159,11 @@ def sync_dataset(conn, dataset: str, year: int):
         log.exception("Failed to fetch %s %s", dataset, year)
         return
     df = df.tz_convert("UTC")
-    long_df = melt_dataframe(df, dataset)
-    log.info("Upserting %d rows for %s %s", len(long_df), dataset, year)
-    upsert_long_df(conn, long_df)
+    total = 0
+    for chunk in melt_dataframe_chunks(df, dataset):
+        upsert_long_df(conn, chunk)
+        total += len(chunk)
+    log.info("Upserted %d rows for %s %s", total, dataset, year)
 
 
 def sync_capacity_prices(conn):
