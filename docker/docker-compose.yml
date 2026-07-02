@@ -1,0 +1,48 @@
+# Local dev/smoke-test only -- verde uses the shared CNPG cluster + existing
+# Grafana instead of these timescaledb/grafana services (see the plan for
+# containerizing this app: kubernetes/apps/nyisotoolkit/ in zoe-infra-v2).
+services:
+  timescaledb:
+    image: timescale/timescaledb:latest-pg16
+    container_name: nyiso-timescaledb
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-nyiso}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-nyiso}
+      POSTGRES_DB: ${POSTGRES_DB:-nyiso}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - timescale_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-nyiso} -d ${POSTGRES_DB:-nyiso}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  sync:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    container_name: nyiso-sync
+    restart: unless-stopped
+    depends_on:
+      timescaledb:
+        condition: service_healthy
+    environment:
+      POSTGRES_HOST: timescaledb
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: ${POSTGRES_USER:-nyiso}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-nyiso}
+      POSTGRES_DB: ${POSTGRES_DB:-nyiso}
+      SYNC_DATASETS: ${SYNC_DATASETS:-fuel_mix_5m,load_5m,lbmp_dam_h}
+      SYNC_YEARS: ${SYNC_YEARS:-2025,2026}
+      SYNC_INTERVAL_SECONDS: ${SYNC_INTERVAL_SECONDS:-3600}
+      SYNC_CAPACITY_PRICES: ${SYNC_CAPACITY_PRICES:-true}
+      MPLBACKEND: Agg
+    volumes:
+      - nyiso_storage:/app/nyisotoolkit/nyisodata/storage
+
+volumes:
+  timescale_data:
+  nyiso_storage:
