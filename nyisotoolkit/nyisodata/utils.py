@@ -47,7 +47,7 @@ def check_and_interpolate_nans(df):
     """
     nan_count = df.isna().sum().sum()
     if nan_count > 0:
-        df.interpolate(method="linear", inplace=True)
+        df.interpolate(method="linear", limit_direction="both", inplace=True)
     return df
 
 

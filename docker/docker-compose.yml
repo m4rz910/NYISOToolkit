@@ -39,6 +39,8 @@ services:
       SYNC_YEARS: ${SYNC_YEARS:-2025,2026}
       SYNC_INTERVAL_SECONDS: ${SYNC_INTERVAL_SECONDS:-3600}
       SYNC_CAPACITY_PRICES: ${SYNC_CAPACITY_PRICES:-true}
+      SYNC_SYSTEM_EVENTS: ${SYNC_SYSTEM_EVENTS:-true}
+      SYNC_EVENTS_INTERVAL_SECONDS: ${SYNC_EVENTS_INTERVAL_SECONDS:-120}
       MPLBACKEND: Agg
     volumes:
       - nyiso_storage:/app/nyisotoolkit/nyisodata/storage

@@ -190,6 +190,7 @@ class NYISOData:
                     )
 
             df = self.dataset_adjustments(df) # Dataset specific adjustments
+            df = utils.check_and_interpolate_nans(df)  # adjustments (e.g. interface_flows pivot) can introduce fresh NaNs
             df.sort_index(inplace=True) # sort index such that slicing works
             df = df.tz_convert("US/Eastern").loc[start:end]  # Convert back to US/Eastern to select time
  

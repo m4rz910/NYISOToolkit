@@ -3,6 +3,7 @@
 import io
 import os
 import time
+import threading
 import zipfile
 import logging
 from datetime import datetime
@@ -31,6 +32,11 @@ YEARS = [int(y.strip()) for y in os.environ.get(
 SYNC_INTERVAL_SECONDS = int(os.environ.get("SYNC_INTERVAL_SECONDS", "3600"))
 SYNC_CAPACITY_PRICES = os.environ.get("SYNC_CAPACITY_PRICES", "true").lower() == "true"
 SYNC_SYSTEM_EVENTS = os.environ.get("SYNC_SYSTEM_EVENTS", "true").lower() == "true"
+# Separate, faster cadence for system_events so alerts show up on dashboards
+# promptly instead of waiting for the (often hourly) SYNC_INTERVAL_SECONDS
+# dataset cycle. 0 disables the fast path (events then only refresh via the
+# slow full-backfill loop in run_once(), as before this was added).
+SYNC_EVENTS_INTERVAL_SECONDS = int(os.environ.get("SYNC_EVENTS_INTERVAL_SECONDS", "120"))
 CURRENT_YEAR = datetime.now().year
 
 # NYISO's system-state/grid-alert log (thunderstorm alerts, reserve pick-ups,
@@ -192,36 +198,85 @@ def upsert_events(conn, events: pd.DataFrame):
     conn.commit()
 
 
+def _fetch_events_month(year: int, month: int):
+    """Fetch+parse a single month's RealTimeEvents zip. Returns a raw
+    DataFrame with ['time', 'message'] columns (Eastern-naive), or None."""
+    url = EVENTS_URL.format(f"{year}{month:02d}")
+    try:
+        r = requests.get(url, timeout=30)
+        if not r.ok:
+            return None
+        z = zipfile.ZipFile(io.BytesIO(r.content))
+        frames = []
+        for name in z.namelist():
+            with z.open(name) as f:
+                day_df = pd.read_csv(f)
+            if day_df.empty:
+                continue
+            day_df.columns = ["time", "message"]
+            frames.append(day_df)
+        return pd.concat(frames, ignore_index=True) if frames else None
+    except Exception:
+        log.exception("Failed to fetch system events %s-%02d", year, month)
+        return None
+
+
+def _localize_events(df: pd.DataFrame) -> pd.DataFrame:
+    df = df.copy()
+    df["time"] = pd.to_datetime(df["time"]).dt.tz_localize(
+        "US/Eastern", ambiguous="NaT", nonexistent="shift_forward")
+    df = df.dropna(subset=["time"])
+    df["time"] = df["time"].dt.tz_convert("UTC")
+    return df
+
+
 def sync_system_events(conn, year: int):
+    """Full-month backfill for a year -- the slow, correctness-safety-net
+    path, run from run_once() on the main SYNC_INTERVAL_SECONDS cadence."""
     log.info("Fetching system events %s", year)
     now = datetime.now()
     months = range(1, 13) if year < now.year else range(1, now.month + 1)
-    frames = []
-    for month in months:
-        url = EVENTS_URL.format(f"{year}{month:02d}")
-        try:
-            r = requests.get(url, timeout=30)
-            if not r.ok:
-                continue
-            z = zipfile.ZipFile(io.BytesIO(r.content))
-            for name in z.namelist():
-                with z.open(name) as f:
-                    day_df = pd.read_csv(f)
-                if day_df.empty:
-                    continue
-                day_df.columns = ["time", "message"]
-                frames.append(day_df)
-        except Exception:
-            log.exception("Failed to fetch system events %s-%02d", year, month)
+    frames = [df for df in (_fetch_events_month(year, m) for m in months) if df is not None]
     if not frames:
         return
-    events = pd.concat(frames, ignore_index=True)
-    events["time"] = pd.to_datetime(events["time"]).dt.tz_localize(
-        "US/Eastern", ambiguous="NaT", nonexistent="shift_forward")
-    events = events.dropna(subset=["time"])
-    events["time"] = events["time"].dt.tz_convert("UTC")
+    events = _localize_events(pd.concat(frames, ignore_index=True))
     upsert_events(conn, events)
     log.info("Upserted %d system events for %s", len(events), year)
+
+
+def sync_system_events_current_month(conn):
+    """Cheap, high-frequency refresh: fetches only the current month's zip
+    (one HTTP request) so dashboards see new alerts within
+    SYNC_EVENTS_INTERVAL_SECONDS without redownloading the multi-year
+    backfill every tick. Uses datetime.now() fresh each call so it stays
+    correct across a Dec 31 -> Jan 1 rollover without a restart."""
+    now = datetime.now()
+    df = _fetch_events_month(now.year, now.month)
+    if df is None:
+        return
+    events = _localize_events(df)
+    upsert_events(conn, events)
+    log.info("Upserted %d system events for %s-%02d (fast path)",
+              len(events), now.year, now.month)
+
+
+def run_events_loop():
+    """Independent, faster-cadence loop for dashboard-visible events. Runs
+    as a daemon thread started once from main(), after the one-time schema
+    pre-flight -- it never calls ensure_schema itself, avoiding a race
+    between two threads issuing CREATE EXTENSION / CREATE TABLE IF NOT
+    EXISTS DDL concurrently."""
+    log.info("Starting events fast-sync thread. interval=%ss", SYNC_EVENTS_INTERVAL_SECONDS)
+    while True:
+        try:
+            conn = get_conn()
+            try:
+                sync_system_events_current_month(conn)
+            finally:
+                conn.close()
+        except Exception:
+            log.exception("Events fast-sync cycle failed")
+        time.sleep(SYNC_EVENTS_INTERVAL_SECONDS)
 
 
 def sync_dataset(conn, dataset: str, year: int):
@@ -296,8 +351,6 @@ def ensure_carbonfree_view(conn):
 def run_once():
     conn = get_conn()
     try:
-        ensure_schema(conn)
-        ensure_carbonfree_view(conn)
         for dataset in DATASETS:
             for year in YEARS:
                 sync_dataset(conn, dataset, year)
@@ -311,8 +364,22 @@ def run_once():
 
 
 def main():
-    log.info("Starting NYISO sync. datasets=%s years=%s interval=%ss",
-              DATASETS, YEARS, SYNC_INTERVAL_SECONDS)
+    log.info("Starting NYISO sync. datasets=%s years=%s interval=%ss events_interval=%ss",
+              DATASETS, YEARS, SYNC_INTERVAL_SECONDS, SYNC_EVENTS_INTERVAL_SECONDS)
+
+    # Schema/view setup runs exactly once here, before any concurrent loop
+    # starts -- run_once() and run_events_loop() both assume it already
+    # exists and never call ensure_schema themselves.
+    conn = get_conn()
+    try:
+        ensure_schema(conn)
+        ensure_carbonfree_view(conn)
+    finally:
+        conn.close()
+
+    if SYNC_SYSTEM_EVENTS and SYNC_EVENTS_INTERVAL_SECONDS > 0:
+        threading.Thread(target=run_events_loop, daemon=True, name="events-fast-sync").start()
+
     while True:
         run_once()
         log.info("Sync cycle complete. Sleeping %ss", SYNC_INTERVAL_SECONDS)
