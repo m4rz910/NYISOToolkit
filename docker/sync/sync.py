@@ -37,7 +37,12 @@ SYNC_SYSTEM_EVENTS = os.environ.get("SYNC_SYSTEM_EVENTS", "true").lower() == "tr
 # dataset cycle. 0 disables the fast path (events then only refresh via the
 # slow full-backfill loop in run_once(), as before this was added).
 SYNC_EVENTS_INTERVAL_SECONDS = int(os.environ.get("SYNC_EVENTS_INTERVAL_SECONDS", "120"))
-CURRENT_YEAR = datetime.now().year
+
+# Historical (non-current-year) (dataset, year) pairs are fully static once
+# synced once -- re-fetching + re-upserting them every cycle is pure waste.
+# Track what's already been synced this process lifetime; reset on restart
+# (self-healing, acceptable full resync once per container lifetime).
+_historical_synced: set[tuple[str, int]] = set()
 
 # NYISO's system-state/grid-alert log (thunderstorm alerts, reserve pick-ups,
 # alert-state transitions), same mis.nyiso.com CSV infra NYISOData itself
@@ -86,6 +91,18 @@ CREATE INDEX IF NOT EXISTS idx_timeseries_dataset_time
     ON timeseries (dataset, time DESC);
 CREATE INDEX IF NOT EXISTS idx_timeseries_region_series_time
     ON timeseries (region, series, time DESC);
+
+ALTER TABLE timeseries SET (
+    timescaledb.compress,
+    timescaledb.compress_segmentby = 'dataset,region,series',
+    timescaledb.compress_orderby = 'time DESC'
+);
+
+-- 90-day margin (not the more common 30) to keep a safety window for
+-- late-arriving NYISO settlement corrections -- see sync_dataset's
+-- psycopg2.Error handling for the fallback if a correction still lands
+-- on an already-compressed chunk.
+SELECT add_compression_policy('timeseries', INTERVAL '90 days', if_not_exists => true);
 
 CREATE TABLE IF NOT EXISTS system_events (
     time    TIMESTAMPTZ NOT NULL,
@@ -148,30 +165,46 @@ def melt_dataframe_chunks(df: pd.DataFrame, dataset: str):
         yield long_df[["time", "dataset", "region", "series", "value"]]
 
 
-def upsert_long_df(conn, long_df: pd.DataFrame):
-    if long_df.empty:
-        return
+def _stage_and_insert(cur, long_df: pd.DataFrame):
+    """Stage long_df via COPY into a TEMP TABLE and upsert into timeseries,
+    skipping no-op writes when the value hasn't changed (avoids rewriting
+    unchanged rows across the PK + 2 secondary indexes every cycle). Does
+    NOT commit -- caller controls the transaction boundary so multiple
+    chunks of one dataset-year can share a single, WAL-cheaper commit."""
     buf = io.StringIO()
     long_df.to_csv(buf, index=False, header=False)
     buf.seek(0)
+    cur.execute("""
+        CREATE TEMP TABLE IF NOT EXISTS staging (
+            time TIMESTAMPTZ, dataset TEXT, region TEXT,
+            series TEXT, value DOUBLE PRECISION
+        ) ON COMMIT DROP;
+    """)
+    cur.execute("TRUNCATE staging;")
+    cur.copy_expert(
+        "COPY staging (time, dataset, region, series, value) FROM STDIN WITH CSV",
+        buf,
+    )
+    cur.execute("""
+        INSERT INTO timeseries (time, dataset, region, series, value)
+        SELECT time, dataset, region, series, value FROM staging
+        ON CONFLICT (dataset, region, series, time)
+        DO UPDATE SET value = EXCLUDED.value
+        WHERE timeseries.value IS DISTINCT FROM EXCLUDED.value;
+    """)
+
+
+def upsert_long_df(conn, long_df: pd.DataFrame, commit: bool = True):
+    """High-level single-shot upsert -- used by callers that already have
+    the whole frame in memory and want one commit per call (e.g. capacity
+    prices). Wide, chunked datasets use _stage_and_insert directly via a
+    shared cursor/transaction (see sync_dataset)."""
+    if long_df.empty:
+        return
     with conn.cursor() as cur:
-        cur.execute("""
-            CREATE TEMP TABLE staging (
-                time TIMESTAMPTZ, dataset TEXT, region TEXT,
-                series TEXT, value DOUBLE PRECISION
-            ) ON COMMIT DROP;
-        """)
-        cur.copy_expert(
-            "COPY staging (time, dataset, region, series, value) FROM STDIN WITH CSV",
-            buf,
-        )
-        cur.execute("""
-            INSERT INTO timeseries (time, dataset, region, series, value)
-            SELECT time, dataset, region, series, value FROM staging
-            ON CONFLICT (dataset, region, series, time)
-            DO UPDATE SET value = EXCLUDED.value;
-        """)
-    conn.commit()
+        _stage_and_insert(cur, long_df)
+    if commit:
+        conn.commit()
 
 
 def upsert_events(conn, events: pd.DataFrame):
@@ -232,10 +265,13 @@ def _localize_events(df: pd.DataFrame) -> pd.DataFrame:
 
 def sync_system_events(conn, year: int):
     """Full-month backfill for a year -- the slow, correctness-safety-net
-    path, run from run_once() on the main SYNC_INTERVAL_SECONDS cadence."""
+    path, run from run_once() on the main SYNC_INTERVAL_SECONDS cadence.
+    Deliberately excludes the current month when year is the current year:
+    the fast run_events_loop thread already owns that month, and refetching
+    it here every cycle would just duplicate that HTTP + COPY + upsert work."""
     log.info("Fetching system events %s", year)
     now = datetime.now()
-    months = range(1, 13) if year < now.year else range(1, now.month + 1)
+    months = range(1, 13) if year < now.year else range(1, now.month)
     frames = [df for df in (_fetch_events_month(year, m) for m in months) if df is not None]
     if not frames:
         return
@@ -280,7 +316,18 @@ def run_events_loop():
 
 
 def sync_dataset(conn, dataset: str, year: int):
-    redownload = (year == CURRENT_YEAR)  # keep current year fresh every cycle
+    is_current = (year == datetime.now().year)  # computed fresh (not a
+                                                  # module constant) so a
+                                                  # long-lived container
+                                                  # doesn't misclassify
+                                                  # "current year" after a
+                                                  # Dec 31 -> Jan 1 rollover
+    if not is_current and (dataset, year) in _historical_synced:
+        log.debug("Skipping static historical %s %s (already synced this run)",
+                   dataset, year)
+        return
+
+    redownload = is_current  # keep current year fresh every cycle
     log.info("Fetching %s %s (redownload=%s)", dataset, year, redownload)
     try:
         df = NYISOData(dataset=dataset, year=year, redownload=redownload).df
@@ -288,11 +335,28 @@ def sync_dataset(conn, dataset: str, year: int):
         log.exception("Failed to fetch %s %s", dataset, year)
         return
     df = df.tz_convert("UTC")
+
     total = 0
-    for chunk in melt_dataframe_chunks(df, dataset):
-        upsert_long_df(conn, chunk)
-        total += len(chunk)
+    with conn.cursor() as cur:
+        for chunk in melt_dataframe_chunks(df, dataset):
+            if chunk.empty:
+                continue
+            try:
+                _stage_and_insert(cur, chunk)
+            except psycopg2.Error:
+                # e.g. a late-arriving correction landing on an already
+                # compressed TimescaleDB chunk -- log and move on rather
+                # than aborting the whole sync cycle for every dataset.
+                log.exception("Upsert failed for a chunk of %s %s "
+                               "(possibly a compressed-chunk write)", dataset, year)
+                conn.rollback()
+                return
+            total += len(chunk)
+    conn.commit()
     log.info("Upserted %d rows for %s %s", total, dataset, year)
+
+    if not is_current:
+        _historical_synced.add((dataset, year))
 
 
 def sync_capacity_prices(conn):
