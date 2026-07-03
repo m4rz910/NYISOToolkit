@@ -225,6 +225,13 @@ class NYISOData:
                 }
             )
             df = df.pivot(columns="Interface Name")  # pivot into better form
+            # Interfaces that begin reporting partway through the year (e.g. a
+            # newly commissioned tie line) produce NaN for every timestamp
+            # before they existed. That's a true zero -- no flow, because the
+            # interface wasn't in service -- not a gap to interpolate, and this
+            # pivot runs after check_and_interpolate_nans() already did its
+            # pass, so it would otherwise trip the NaN assertion below forever.
+            df = df.fillna(0)
             df = df.swaplevel(axis="columns")  # add external/internal flows level
             f = (
                 lambda x: "External Flows"
@@ -272,6 +279,7 @@ EXTERNAL_TFLOWS_MAP = {
     "SCH - HQ - NY": "HQ CHATEAUGUAY",
     "SCH - HQ_CEDARS": "HQ CEDARS",
     "SCH - HQ_IMPORT_EXPORT": "SCH - HQ IMPORT EXPORT",  # subset of HQ Chateauguay
+    "SCH - HQ_CHPE": "HQ CHPE",  # Champlain Hudson Power Express, in service 2026-02-10
     "SCH - NE - NY": "NPX NEW ENGLAND (NE)",
     "SCH - NPX_1385": "NPX 1385 NORTHPORT (NNC)",
     "SCH - NPX_CSC": "NPX CROSS SOUND CABLE (CSC)",
