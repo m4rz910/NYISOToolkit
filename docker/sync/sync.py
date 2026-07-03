@@ -338,6 +338,7 @@ def sync_dataset(conn, dataset: str, year: int):
 
     total = 0
     with conn.cursor() as cur:
+        cur.execute("SET LOCAL timescaledb.max_tuples_decompressed_per_dml_transaction = 0")
         for chunk in melt_dataframe_chunks(df, dataset):
             if chunk.empty:
                 continue
