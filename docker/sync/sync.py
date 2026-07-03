@@ -367,9 +367,6 @@ def sync_capacity_prices(conn):
     except Exception:
         log.exception("Failed to fetch capacity prices")
         return
-    # NOTE: NYISOCapacity.prices()'s index tz/naivety and MultiIndex column
-    # order were not verified against a live xlsx during implementation --
-    # print prices.columns / prices.index once and adjust below if wrong.
     idx = pd.to_datetime(prices.index)
     if idx.tz is None:
         idx = idx.tz_localize("US/Eastern")
@@ -377,14 +374,48 @@ def sync_capacity_prices(conn):
     prices.index.name = "time"
 
     frames = []
-    for col in prices.columns:  # MultiIndex: (auction_type, locality)
+    for col in prices.columns:  # MultiIndex: (locality, auction_type)
         s = prices[col].rename("value").reset_index()
         s["value"] = pd.to_numeric(s["value"], errors="coerce")
-        s["region"] = str(col[1])
-        s["series"] = str(col[0])
+        s["region"] = str(col[0])
+        s["series"] = str(col[1])
         frames.append(s)
     long_df = pd.concat(frames, ignore_index=True)
     long_df["dataset"] = "capacity_prices"
+    long_df = long_df.dropna(subset=["value"])
+    upsert_long_df(conn, long_df[["time", "dataset", "region", "series", "value"]])
+
+
+def sync_capacity_mw(conn):
+    """NYCA/GHIJ/NYC/LI monthly MW figures from the same ICAP-Market-Report
+    xlsx as sync_capacity_prices -- MW Cleared (capacity actually procured)
+    and Requirements (ICAP quota). Dropping the pct-of-requirement and Spot
+    MCP columns from this sheet since MCP is already covered by
+    capacity_prices."""
+    log.info("Fetching capacity MW (cleared/requirements)")
+    try:
+        summary = NYISOCapacity(date=pd.Timestamp.now()).summary_table()
+    except Exception:
+        log.exception("Failed to fetch capacity MW summary")
+        return
+    idx = pd.to_datetime(summary.index)
+    if idx.tz is None:
+        idx = idx.tz_localize("US/Eastern")
+    summary.index = idx.tz_convert("UTC")
+    summary.index.name = "time"
+
+    keep_metrics = {"MW Cleared", "Requirements"}
+    frames = []
+    for col in summary.columns:  # MultiIndex: (locality, metric)
+        if col[1] not in keep_metrics:
+            continue
+        s = summary[col].rename("value").reset_index()
+        s["value"] = pd.to_numeric(s["value"], errors="coerce")
+        s["region"] = str(col[0])
+        s["series"] = str(col[1])
+        frames.append(s)
+    long_df = pd.concat(frames, ignore_index=True)
+    long_df["dataset"] = "capacity_mw"
     long_df = long_df.dropna(subset=["value"])
     upsert_long_df(conn, long_df[["time", "dataset", "region", "series", "value"]])
 
@@ -421,6 +452,7 @@ def run_once():
                 sync_dataset(conn, dataset, year)
         if SYNC_CAPACITY_PRICES:
             sync_capacity_prices(conn)
+            sync_capacity_mw(conn)
         if SYNC_SYSTEM_EVENTS:
             for year in YEARS:
                 sync_system_events(conn, year)
